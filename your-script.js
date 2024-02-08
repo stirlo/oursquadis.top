@@ -9,7 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const colors = {
         ground: 0x228B22, // Green
         treeTrunk: 0x8B4513, // Brown
-        treeLeaves: 0x006400 // DarkGreen
+        treeLeaves: 0x006400, // DarkGreen
+        star: 0xFFFFFF // White
     };
 
     // Ground
@@ -43,6 +44,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 createTree(i * 2, j * 2);
             }
         }
+    }
+
+    // Starry sky
+    const starGeometry = new THREE.SphereGeometry(0.05, 24, 24);
+    const starMaterial = new THREE.MeshBasicMaterial({ color: colors.star });
+    const stars = 1000;
+    for (let i = 0; i < stars; i++) {
+        const star = new THREE.Mesh(starGeometry, starMaterial);
+        const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(200));
+        star.position.set(x, y, z);
+        scene.add(star);
     }
 
     camera.position.set(0, 5, 10);
