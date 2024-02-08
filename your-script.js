@@ -45,20 +45,20 @@ document.addEventListener("DOMContentLoaded", () => {
         trees.push(createTree(x, z));
     }
 
-      // Starry sky
+    // Starry sky with adjusted values
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.5, sizeAttenuation: true });
     const starVertices = [];
     for (let i = 0; i < 10000; i++) {
-        const x = THREE.MathUtils.randFloatSpread(2000);
-        const y = THREE.MathUtils.randFloat(-100, 1000); // Extended down to the horizon
-        const z = THREE.MathUtils.randFloatSpread(2000);
+        const x = THREE.MathUtils.randFloatSpread(4000); // Match the ground plane spread
+        const y = THREE.MathUtils.randFloat(50, 1500); // Adjusted to ensure stars cover from just above the ground to higher up
+        const z = THREE.MathUtils.randFloatSpread(4000); // Match the ground plane spread
         starVertices.push(x, y, z);
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
-    
+
     // Adjusting camera perspective
     camera.position.set(0, 500, 1000); // Camera position for a better overview
     camera.lookAt(0, 0, 0);
