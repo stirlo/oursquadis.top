@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Starry sky
     const starGeometry = new THREE.SphereGeometry(0.05, 24, 24);
     const starMaterial = new THREE.MeshBasicMaterial({ color: colors.star });
-    const stars = 1000;
+    const stars = 10000;
     for (let i = 0; i < stars; i++) {
         const star = new THREE.Mesh(starGeometry, starMaterial);
         const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(200));
