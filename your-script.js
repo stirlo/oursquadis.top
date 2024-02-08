@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Ground
-    const groundGeometry = new THREE.PlaneGeometry(200, 200);
+    const groundGeometry = new THREE.PlaneGeometry(400, 400);
     const groundMaterial = new THREE.MeshBasicMaterial({ color: colors.ground });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2; // Rotate to lay flat
@@ -38,13 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Create forest
-    const treeSpacing = 5; // Increase spacing to avoid clumping
-    for (let i = -20; i <= 20; i += treeSpacing) {
-        for (let j = -20; j <= 20; j += treeSpacing) {
-            if (Math.random() > 0.1) { // 90% chance to create a tree, slightly increased density
-                createTree(i, j);
-            }
-        }
+    const numberOfTrees = 200;
+    for (let i = 0; i < numberOfTrees; i++) {
+        const x = THREE.MathUtils.randFloatSpread(400); // Spread trees across the ground
+        const z = THREE.MathUtils.randFloatSpread(400);
+        createTree(x, z);
     }
 
     // Starry sky
@@ -53,12 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const stars = 1000;
     for (let i = 0; i < stars; i++) {
         const star = new THREE.Mesh(starGeometry, starMaterial);
-        const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(200));
+        const x = THREE.MathUtils.randFloatSpread(200);
+        const y = THREE.MathUtils.randFloat(100, 200); // Keep stars in the top third
+        const z = THREE.MathUtils.randFloatSpread(200);
         star.position.set(x, y, z);
         scene.add(star);
     }
 
-    camera.position.set(0, 20, 50);
+    camera.position.set(0, 50, 100);
     camera.lookAt(0, 0, 0);
 
     // Animation loop
