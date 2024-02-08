@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Create forest, rocks, and bushes
-    const elements = 300;
+    const elements = 1000;
     for (let i = 0; i < elements; i++) {
         const x = THREE.MathUtils.randFloatSpread(400); // Spread elements across the ground
         const z = THREE.MathUtils.randFloatSpread(400);
