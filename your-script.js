@@ -6,9 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Adjusting the ground plane size and position
+    // Increasing the ground plane size
     const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
-    const groundGeometry = new THREE.PlaneGeometry(2000, 2000); // Increased ground plane size
+    const groundGeometry = new THREE.PlaneGeometry(4000, 4000); // Doubled ground plane size
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = 0; // Correctly positioned at y = 0
@@ -40,13 +40,13 @@ document.addEventListener("DOMContentLoaded", () => {
     let trees = [];
     const treeCount = 5000; // Target number of trees
     for (let i = 0; i < treeCount; i++) {
-        const x = THREE.MathUtils.randFloatSpread(1600); // Adjusted for the increased ground plane size
-        const z = THREE.MathUtils.randFloatSpread(-4000, -2000); // Extended spread towards the horizon
+        const x = THREE.MathUtils.randFloatSpread(3200); // Adjusted for the increased ground plane size
+        const z = THREE.MathUtils.randFloatSpread(-8000, -4000); // Extended spread towards the horizon
         trees.push(createTree(x, z));
     }
 
     // Adjusting camera perspective for clarity
-    camera.position.set(0, 200, 500); // Adjusted camera position for a better overview
+    camera.position.set(0, 500, 1000); // Adjusted camera position for a better overview
     camera.lookAt(0, 0, 0);
 
     // Animation loop for smooth infinite terrain
