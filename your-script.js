@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ground: 0x228B22, // Green
         treeTrunk: 0x8B4513, // Brown
         treeLeaves: 0x006400, // DarkGreen
+        rock: 0x808080, // Grey
+        bush: 0x2E8B57, // SeaGreen
         star: 0xFFFFFF // White
     };
 
@@ -37,12 +39,37 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(leaves);
     };
 
-    // Create forest
-    const numberOfTrees = 200;
-    for (let i = 0; i < numberOfTrees; i++) {
-        const x = THREE.MathUtils.randFloatSpread(400); // Spread trees across the ground
+    // Rock function
+    const createRock = (x, z) => {
+        const rockGeometry = new THREE.DodecahedronGeometry(Math.random() * 0.5 + 0.1);
+        const rockMaterial = new THREE.MeshBasicMaterial({ color: colors.rock });
+        const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+        rock.position.set(x, 0, z);
+        scene.add(rock);
+    };
+
+    // Bush function
+    const createBush = (x, z) => {
+        const bushGeometry = new THREE.SphereGeometry(Math.random() * 0.5 + 0.25, 32, 32);
+        const bushMaterial = new THREE.MeshBasicMaterial({ color: colors.bush });
+        const bush = new THREE.Mesh(bushGeometry, bushMaterial);
+        bush.position.set(x, 0, z);
+        scene.add(bush);
+    };
+
+    // Create forest, rocks, and bushes
+    const elements = 300;
+    for (let i = 0; i < elements; i++) {
+        const x = THREE.MathUtils.randFloatSpread(400); // Spread elements across the ground
         const z = THREE.MathUtils.randFloatSpread(400);
-        createTree(x, z);
+        const elementType = Math.random();
+        if (elementType < 0.5) {
+            createTree(x, z);
+        } else if (elementType < 0.75) {
+            createRock(x, z);
+        } else {
+            createBush(x, z);
+        }
     }
 
     // Starry sky
