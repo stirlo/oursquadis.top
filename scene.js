@@ -1,5 +1,4 @@
 
-/
 
 // Import necessary modules from Three.js
 import * as THREE from 'three.module.js';
