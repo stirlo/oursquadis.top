@@ -1,7 +1,7 @@
 
 
 // Import necessary modules from Three.js
-import * as THREE from 'three.module.js';
+import * as THREE from 'https://oursquadis.top/three.module.js';
 
 function initScene() {
     // Scene setup
