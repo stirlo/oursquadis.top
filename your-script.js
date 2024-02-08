@@ -47,6 +47,21 @@ document.addEventListener("DOMContentLoaded", () => {
         trees.push(createTree(x, z));
     }
 
+ // Starry sky - Static star field
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.0, sizeAttenuation: true });
+    const starVertices = [];
+    for (let i = 0; i < 20000; i++) { // Increased number of stars for a denser star field
+        const x = THREE.MathUtils.randFloatSpread(10000); // Wider spread to cover the sky
+        const y = THREE.MathUtils.randFloat(1000, 3000); // Positioned higher to form a sky dome
+        const z = THREE.MathUtils.randFloatSpread(10000);
+        starVertices.push(x, y, z);
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
+
+    
     // Adjusting camera perspective to better capture the scale of the trees
     camera.position.set(0, 800, 1600); // Adjusted camera position for a comprehensive view
     camera.lookAt(0, 0, 0);
