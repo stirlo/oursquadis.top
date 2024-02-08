@@ -1,84 +1,77 @@
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
+    camera.position.set(0, 500, 1500);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setClearColor(0x000000); // Set background color to black
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
     // Ground
     const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
-    const groundGeometry = new THREE.PlaneGeometry(8000, 8000); // Increased ground size for larger trees
+    const groundGeometry = new THREE.PlaneGeometry(8000, 8000);
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = 0;
     scene.add(ground);
 
-    // Tree function with significantly increased scale
-    function createTree(x, z) {
+    // Tree function
+    function createTree() {
         const trunkHeight = 100; // Significantly increased height
         const trunkRadius = 5; // Increased radius for visibility
         const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.2, trunkHeight, 32);
         const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
         const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-        trunk.position.set(x, trunkHeight / 2, z); // Adjusted for increased height
 
         const leavesHeight = 50; // Increased height for leaves
         const leavesRadius = 20; // Increased radius for a larger canopy
         const leavesGeometry = new THREE.ConeGeometry(leavesRadius, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-        leaves.position.set(x, trunkHeight + leavesHeight / 2, z); // Adjusted for increased size
+        leaves.position.y = trunkHeight;
 
         const tree = new THREE.Group();
         tree.add(trunk);
         tree.add(leaves);
+        tree.position.set(THREE.MathUtils.randFloatSpread(7000), 0, THREE.MathUtils.randFloatSpread(-16000, -8000));
 
-        scene.add(tree);
         return tree;
     }
 
-    // Trees array for dynamic creation and movement
-    let trees = [];
-    const treeCount = 500; // Reduced tree count to manage performance with larger trees
-    for (let i = 0; i < treeCount; i++) {
-        const x = THREE.MathUtils.randFloatSpread(7000); // Adjusted for the increased ground area
-        const z = THREE.MathUtils.randFloatSpread(-16000, -8000); // Extended spread towards the horizon
-        trees.push(createTree(x, z));
+    // Create and add trees to the scene
+    const trees = [];
+    for (let i = 0; i < 500; i++) {
+        const tree = createTree();
+        trees.push(tree);
+        scene.add(tree);
     }
 
- // Starry sky - Static star field
+    // Starry sky
     const starsGeometry = new THREE.BufferGeometry();
     const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.0, sizeAttenuation: true });
     const starVertices = [];
-    for (let i = 0; i < 20000; i++) { // Increased number of stars for a denser star field
-        const x = THREE.MathUtils.randFloatSpread(10000); // Wider spread to cover the sky
-        const y = THREE.MathUtils.randFloat(1000, 3000); // Positioned higher to form a sky dome
-        const z = THREE.MathUtils.randFloatSpread(10000);
-        starVertices.push(x, y, z);
+    for (let i = 0; i < 20000; i++) {
+        starVertices.push(THREE.MathUtils.randFloatSpread(20000), THREE.MathUtils.randFloat(1000, 3000), THREE.MathUtils.randFloatSpread(20000));
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
     const stars = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(stars);
 
-    
-    // Adjusting camera perspective to better capture the scale of the trees
-    camera.position.set(0, 800, 1600); // Adjusted camera position for a comprehensive view
-    camera.lookAt(0, 0, 0);
-
-    // Animation loop for moving trees to create the illusion of forward movement
-    const animate = () => {
+    // Animation loop
+    function animate() {
         requestAnimationFrame(animate);
 
-        // Move trees towards the camera
+        // Move trees towards the camera to simulate forward motion
         trees.forEach(tree => {
-            tree.position.z += 5; // Increased speed of movement towards the camera
-            if (tree.position.z > 500) { // Check if the tree has moved past the camera
-                tree.position.z = THREE.MathUtils.randFloatSpread(-16000, -8000); // Reset tree position back towards the horizon
+            tree.position.z += 5;
+            if (tree.position.z > 500) {
+                tree.position.z = THREE.MathUtils.randFloatSpread(-16000, -8000);
             }
         });
 
         renderer.render(scene, camera);
-    };
+    }
+
     animate();
 });
