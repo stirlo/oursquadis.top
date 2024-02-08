@@ -2,16 +2,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer();
-    renderer.setClearColor(0x000000); // Ensure background is set to black
+    renderer.setClearColor(0x000000); // Set background color to black
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
     // Ground
     const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
-    const groundGeometry = new THREE.PlaneGeometry(1000, 1000); // Increased size for visibility
+    const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.5; // Slightly lower to ensure trees are placed above the ground
+    ground.position.y = -0.5; // Ensure trees are placed above the ground
     scene.add(ground);
 
     // Tree function
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const leavesGeometry = new THREE.ConeGeometry(0.5, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-        leaves.position.set(x, trunkHeight + leavesHeight / 2, z);
+        leaves.position.set(x, trunk.position.y + trunkHeight / 2 + leavesHeight / 2, z);
 
         const tree = new THREE.Group();
         tree.add(trunk);
@@ -38,16 +38,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Trees array and recycling logic
     let trees = [];
-    const treeCount = 100; // Manageable number of trees for smooth recycling
+    const treeCount = 100;
     for (let i = 0; i < treeCount; i++) {
-        const x = THREE.MathUtils.randFloatSpread(800); // Spread within the ground area
-        const z = THREE.MathUtils.randFloatSpread(-500); // Start from the horizon to near the camera
+        const x = THREE.MathUtils.randFloatSpread(800);
+        const z = THREE.MathUtils.randFloatSpread(-500, 0);
         trees.push(createTree(x, z));
     }
 
     function resetTree(tree) {
         tree.position.x = THREE.MathUtils.randFloatSpread(800);
-        tree.position.z = -500; // Reset back to the horizon
+        tree.position.z = -500; // Reset back to the horizon for smooth recycling
     }
 
     // Starry sky
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const starVertices = [];
     for (let i = 0; i < 10000; i++) {
         const x = THREE.MathUtils.randFloatSpread(2000);
-        const y = THREE.MathUtils.randFloat(100, 1000); // Ensure stars are above the ground and trees
+        const y = THREE.MathUtils.randFloat(200, 1000); // Adjusted to ensure stars are well above the ground and trees
         const z = THREE.MathUtils.randFloatSpread(2000);
         starVertices.push(x, y, z);
     }
@@ -73,8 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Move trees towards the camera for the illusion of forward movement
         trees.forEach(tree => {
-            tree.position.z += 2;
-            if (tree.position.z > 50) {
+            tree.position.z += 2; // Adjust speed as needed
+            if (tree.position.z > 50) { // Check if the tree has moved past the camera
                 resetTree(tree); // Recycle trees for a smooth infinite terrain illusion
             }
         });
