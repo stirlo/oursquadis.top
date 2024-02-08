@@ -13,7 +13,14 @@ document.addEventListener("DOMContentLoaded", () => {
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // Instanced mesh for trees, rocks, and bushes
+    // Helper function to add objects
+    function addObject(x, z, geometry, material) {
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, 0, z);
+        scene.add(mesh);
+    }
+
+    // Materials and geometries for trees, rocks, and bushes
     const treeMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
     const treeGeometry = new THREE.CylinderGeometry(0.1, 0.2, 3, 32);
     const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
@@ -23,14 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const bushMaterial = new THREE.MeshBasicMaterial({ color: 0x2E8B57 });
     const bushGeometry = new THREE.SphereGeometry(0.5, 32, 32);
 
-    // Helper function to add objects
-    function addObject(x, z, geometry, material) {
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, 0, z);
-        scene.add(mesh);
-    }
-
-    // Populate the scene
+    // Populate the scene with trees, rocks, and bushes
     const elements = 1000;
     for (let i = 0; i < elements; i++) {
         const x = THREE.MathUtils.randFloatSpread(500);
@@ -46,16 +46,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Starry sky
-    const starMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
-    const starGeometry = new THREE.SphereGeometry(0.05, 24, 24);
-    const stars = 2000;
-    for (let i = 0; i < stars; i++) {
-        const x = THREE.MathUtils.randFloatSpread(1000);
-        const y = THREE.MathUtils.randFloat(200, 300);
-        const z = THREE.MathUtils.randFloatSpread(1000);
-        addObject(x, y, starGeometry, starMaterial);
+    // Starry sky using Points
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.5, sizeAttenuation: false });
+    const starVertices = [];
+    const starsCount = 5000; // Increased number of stars
+    for (let i = 0; i < starsCount; i++) {
+        const x = THREE.MathUtils.randFloatSpread(2000); // Wider spread
+        const y = THREE.MathUtils.randFloat(200, 500); // Positioned higher and within a larger range
+        const z = THREE.MathUtils.randFloatSpread(2000);
+        starVertices.push(x, y, z);
     }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
 
     camera.position.set(0, 50, 100);
     camera.lookAt(0, 0, 0);
