@@ -20,13 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.2, trunkHeight, 32);
         const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
         const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-        trunk.position.set(x, 0, z);
+        trunk.position.set(x, trunkHeight / 2, z); // Adjusted for correct ground positioning
 
         const leavesHeight = Math.random() * 1 + 0.5;
         const leavesGeometry = new THREE.ConeGeometry(0.5, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-        leaves.position.set(x, trunkHeight, z);
+        leaves.position.set(x, trunkHeight + leavesHeight / 2, z); // Adjusted for correct ground positioning
 
         const tree = new THREE.Group();
         tree.add(trunk);
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Trees array and recycling logic
     let trees = [];
-    const treeCount = 10000; // Number of trees
+    const treeCount = 5000; // Adjusted number of trees
     for (let i = 0; i < treeCount; i++) {
         const x = THREE.MathUtils.randFloatSpread(800); // Spread within the ground area
         const z = THREE.MathUtils.randFloatSpread(-5000, -2500); // Extended spread towards the horizon
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const starVertices = [];
     for (let i = 0; i < 10000; i++) {
         const x = THREE.MathUtils.randFloatSpread(2000);
-        const y = THREE.MathUtils.randFloat(200, 1000); // Ensure stars are well above the ground and trees
+        const y = THREE.MathUtils.randFloat(-100, 1000); // Extended down to the horizon
         const z = THREE.MathUtils.randFloatSpread(2000);
         starVertices.push(x, y, z);
     }
