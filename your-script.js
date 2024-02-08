@@ -6,27 +6,27 @@ document.addEventListener("DOMContentLoaded", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Ground
+    // Adjusting the ground plane size and position
     const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
-    const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
+    const groundGeometry = new THREE.PlaneGeometry(2000, 2000); // Increased ground plane size
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.5; // Ensure trees are placed above the ground
+    ground.position.y = 0; // Correctly positioned at y = 0
     scene.add(ground);
 
-    // Tree function
+    // Tree function with adjusted positioning and scaling
     function createTree(x, z) {
         const trunkHeight = Math.random() * 2 + 1;
         const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.2, trunkHeight, 32);
         const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
         const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-        trunk.position.set(x, -0.5 + trunkHeight / 2, z); // Adjusted for correct ground positioning
+        trunk.position.set(x, trunkHeight / 2, z); // Ensuring base is at ground level
 
         const leavesHeight = Math.random() * 1 + 0.5;
         const leavesGeometry = new THREE.ConeGeometry(0.5, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-        leaves.position.set(x, -0.5 + trunkHeight + leavesHeight / 2, z); // Adjusted for correct ground positioning
+        leaves.position.set(x, trunkHeight + leavesHeight / 2, z);
 
         const tree = new THREE.Group();
         tree.add(trunk);
@@ -36,44 +36,22 @@ document.addEventListener("DOMContentLoaded", () => {
         return tree;
     }
 
-    // Dynamic tree creation
+    // Trees array and dynamic creation logic
     let trees = [];
-    const targetTreeCount = 1000; // Target number of trees
-    let currentTreeCount = 0;
-
-    function addTreesGradually() {
-        if (currentTreeCount < targetTreeCount) {
-            const x = THREE.MathUtils.randFloatSpread(800); // Spread within the ground area
-            const z = THREE.MathUtils.randFloatSpread(-5000, -2500); // Extended spread towards the horizon
-            trees.push(createTree(x, z));
-            currentTreeCount++;
-        }
+    const treeCount = 5000; // Target number of trees
+    for (let i = 0; i < treeCount; i++) {
+        const x = THREE.MathUtils.randFloatSpread(1600); // Adjusted for the increased ground plane size
+        const z = THREE.MathUtils.randFloatSpread(-4000, -2000); // Extended spread towards the horizon
+        trees.push(createTree(x, z));
     }
 
-    // Starry sky
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.5, sizeAttenuation: true });
-    const starVertices = [];
-    for (let i = 0; i < 10000; i++) {
-        const x = THREE.MathUtils.randFloatSpread(2000);
-        const y = THREE.MathUtils.randFloat(-100, 1000); // Extended down to the horizon
-        const z = THREE.MathUtils.randFloatSpread(2000);
-        starVertices.push(x, y, z);
-    }
-    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-    const stars = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(stars);
-
-    camera.position.set(0, 50, 100);
+    // Adjusting camera perspective for clarity
+    camera.position.set(0, 200, 500); // Adjusted camera position for a better overview
     camera.lookAt(0, 0, 0);
 
-    // Animation loop for smooth infinite terrain and gradual tree addition
+    // Animation loop for smooth infinite terrain
     const animate = () => {
         requestAnimationFrame(animate);
-
-        // Gradually add trees
-        addTreesGradually();
-
         renderer.render(scene, camera);
     };
     animate();
