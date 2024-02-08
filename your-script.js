@@ -1,14 +1,19 @@
+
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
-    // Position the camera to a higher point and angle it downwards
-    camera.position.set(0, 1500, 1500);
-    camera.lookAt(new THREE.Vector3(0, 0, -2000)); // Look at a point further down the z-axis
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 20000);
+    // Reposition and tilt the camera to capture both ground and sky
+    camera.position.set(0, 2000, 3000);
+    camera.lookAt(new THREE.Vector3(0, 0, -1000));
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setClearColor(0x000000); // Set background color to black
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    // Ambient Light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Soft white light
+    scene.add(ambientLight);
 
     // Ground
     const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
