@@ -38,17 +38,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Trees array and recycling logic
     let trees = [];
-    const treeCount = 10000; // Halved number of trees to improve performance
+    const treeCount = 10000; // Number of trees
     for (let i = 0; i < treeCount; i++) {
         const x = THREE.MathUtils.randFloatSpread(800); // Spread within the ground area
-        const z = THREE.MathUtils.randFloatSpread(-1000, -500); // Extended spread towards the horizon
+        const z = THREE.MathUtils.randFloatSpread(-5000, -2500); // Extended spread towards the horizon
         trees.push(createTree(x, z));
     }
 
     function resetTree(tree) {
         tree.position.x = THREE.MathUtils.randFloatSpread(800);
-        tree.position.z = -1000; // Reset further back on the horizon
+        tree.position.z = THREE.MathUtils.randFloat(-5000, -2500); // Reset further back on the horizon
     }
+
+    // Starry sky
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.5, sizeAttenuation: true });
+    const starVertices = [];
+    for (let i = 0; i < 10000; i++) {
+        const x = THREE.MathUtils.randFloatSpread(2000);
+        const y = THREE.MathUtils.randFloat(200, 1000); // Ensure stars are well above the ground and trees
+        const z = THREE.MathUtils.randFloatSpread(2000);
+        starVertices.push(x, y, z);
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
 
     camera.position.set(0, 50, 100);
     camera.lookAt(0, 0, 0);
