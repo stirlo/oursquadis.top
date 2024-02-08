@@ -1,12 +1,13 @@
+
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer();
-    renderer.setClearColor(0x000000); // Set background color to black
+    renderer.setClearColor(0x000000); // Ensure background is set to black
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Ground
+    // Ground (omitting trees for brevity, assuming tree code remains unchanged)
     const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 });
     const groundGeometry = new THREE.PlaneGeometry(500, 500);
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -38,15 +39,19 @@ document.addEventListener("DOMContentLoaded", () => {
         createTree(x, z);
     }
 
-    // Starry sky
+   // Starry sky
     const starsGeometry = new THREE.BufferGeometry();
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.5, sizeAttenuation: true });
+    const starsMaterial = new THREE.PointsMaterial({
+        color: 0xFFFFFF,
+        size: 1.5,
+        sizeAttenuation: true
+    });
     const starVertices = [];
-    const starsCount = 5000;
+    const starsCount = 10000; // Increase the number of stars for a denser sky
     for (let i = 0; i < starsCount; i++) {
-        const x = THREE.MathUtils.randFloatSpread(2000);
-        const y = THREE.MathUtils.randFloat(50, 1000); // Expanded to fill more of the sky
-        const z = THREE.MathUtils.randFloatSpread(2000);
+        const x = THREE.MathUtils.randFloatSpread(2000); // Ensure a wide spread
+        const y = THREE.MathUtils.randFloatSpread(1000); // Adjust vertical spread to ensure visibility
+        const z = THREE.MathUtils.randFloatSpread(2000); // Ensure a wide spread
         starVertices.push(x, y, z);
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
