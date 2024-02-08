@@ -26,7 +26,8 @@
 
         // Earth geometry and texture
         const geometry = new THREE.SphereGeometry(1, 32, 32);
-        const texture = new THREE.TextureLoader().load('https://www.solarsystemscope.com/textures/download/8k_earth_daymap.jpg');
+        const texture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg');
+        //const texture = new THREE.TextureLoader().load('https://www.solarsystemscope.com/textures/download/8k_earth_daymap.jpg'); 8K version
         const material = new THREE.MeshPhongMaterial({ map: texture });
         const earth = new THREE.Mesh(geometry, material);
         scene.add(earth);
