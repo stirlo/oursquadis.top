@@ -53,7 +53,26 @@ document.addEventListener("DOMContentLoaded", () => {
         tree.position.set(x, 0, z);
     }
 
-    // Starry sky (unchanged, assuming star code remains the same)
+   // Starry sky
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({
+        color: 0xFFFFFF,
+        size: 1.5,
+        sizeAttenuation: true
+    });
+    const starVertices = [];
+    for (let i = 0; i < 10000; i++) {
+        const x = THREE.MathUtils.randFloatSpread(2000);
+        const y = THREE.MathUtils.randFloatSpread(1000);
+        const z = THREE.MathUtils.randFloatSpread(2000);
+        starVertices.push(x, y, z);
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
+
+    camera.position.set(0, 50, 100);
+    camera.lookAt(0, 0, 0);
 
     // Animation loop
     const animate = () => {
