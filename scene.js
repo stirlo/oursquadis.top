@@ -1,7 +1,7 @@
 
 // Dynamically load Three.js
 var script = document.createElement('script');
-script.src = 'https://cdn.jsdelivr.net/npm/three@0.117.1/build/three.module.js';
+script.src = 'three.module.js';
 script.onload = function() {
     // Initialize your scene after Three.js has loaded
     initScene();
