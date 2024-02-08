@@ -55,15 +55,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Starry sky
-   // const starsGeometry = new THREE.BufferGeometry();
-   // const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.0, sizeAttenuation: true });
-   // const starVertices = [];
-   // for (let i = 0; i < 20000; i++) {
-   //     starVertices.push(THREE.MathUtils.randFloatSpread(10000), THREE.MathUtils.randFloat(500, 3000), THREE.MathUtils.randFloatSpread(10000));
-   // }
-   // starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-   // const stars = new THREE.Points(starsGeometry, starsMaterial);
-   // scene.add(stars);
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.0, sizeAttenuation: true });
+    const starVertices = [];
+    for (let i = 0; i < 20000; i++) {
+        starVertices.push(THREE.MathUtils.randFloatSpread(10000), THREE.MathUtils.randFloat(500, 3000), THREE.MathUtils.randFloatSpread(10000));
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
 
     // Animation loop
     function animate() {
