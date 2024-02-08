@@ -1,7 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 500, 1500);
+    // Adjust the camera position to better frame the ground and the sky
+    camera.position.set(0, 1500, 1500);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -18,14 +19,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Tree function
     function createTree() {
-        const trunkHeight = 100; // Significantly increased height
-        const trunkRadius = 5; // Increased radius for visibility
+        const trunkHeight = 100; // Tree height
+        const trunkRadius = 5; // Tree width
         const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.2, trunkHeight, 32);
         const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
         const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
 
-        const leavesHeight = 50; // Increased height for leaves
-        const leavesRadius = 20; // Increased radius for a larger canopy
+        const leavesHeight = 50; // Leaves height
+        const leavesRadius = 20; // Leaves width
         const leavesGeometry = new THREE.ConeGeometry(leavesRadius, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
@@ -34,14 +35,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const tree = new THREE.Group();
         tree.add(trunk);
         tree.add(leaves);
-        tree.position.set(THREE.MathUtils.randFloatSpread(7000), 0, THREE.MathUtils.randFloatSpread(-16000, -8000));
+        // Adjust tree spawn point to the halfway point of the window
+        tree.position.set(THREE.MathUtils.randFloatSpread(7000), 0, THREE.MathUtils.randFloat(-4000, 0));
 
         return tree;
     }
 
-    // Create and add trees to the scene
-    const trees = [];
-    for (let i = 0; i < 500; i++) {
+    // Trees array for dynamic creation and movement
+    let trees = [];
+    const treeCount = 500; // Number of trees
+    for (let i = 0; i < treeCount; i++) {
         const tree = createTree();
         trees.push(tree);
         scene.add(tree);
@@ -52,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.0, sizeAttenuation: true });
     const starVertices = [];
     for (let i = 0; i < 20000; i++) {
-        starVertices.push(THREE.MathUtils.randFloatSpread(20000), THREE.MathUtils.randFloat(1000, 3000), THREE.MathUtils.randFloatSpread(20000));
+        starVertices.push(THREE.MathUtils.randFloatSpread(10000), THREE.MathUtils.randFloat(500, 3000), THREE.MathUtils.randFloatSpread(10000));
     }
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
     const stars = new THREE.Points(starsGeometry, starsMaterial);
@@ -62,16 +65,16 @@ document.addEventListener("DOMContentLoaded", () => {
     function animate() {
         requestAnimationFrame(animate);
 
-        // Move trees towards the camera to simulate forward motion
+        // Move trees towards the camera
         trees.forEach(tree => {
             tree.position.z += 5;
             if (tree.position.z > 500) {
-                tree.position.z = THREE.MathUtils.randFloatSpread(-16000, -8000);
+                tree.position.z = THREE.MathUtils.randFloat(-4000, 0); // Reset tree position
             }
         });
 
         renderer.render(scene, camera);
-    }
+    };
 
     animate();
 });
