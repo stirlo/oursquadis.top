@@ -38,10 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Trees array and recycling logic
     let trees = [];
-    const treeCount = 100;
+    const treeCount = 500; // Increased number of trees for a denser illusion
     for (let i = 0; i < treeCount; i++) {
-        const x = THREE.MathUtils.randFloatSpread(800);
-        const z = THREE.MathUtils.randFloatSpread(-500, 0);
+        const x = THREE.MathUtils.randFloatSpread(800); // Spread within the ground area
+        // Adjust z to ensure trees start just beyond the horizon
+        const z = THREE.MathUtils.randFloat(-500, -450); // Closer to the horizon for initial placement
         trees.push(createTree(x, z));
     }
 
