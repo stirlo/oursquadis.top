@@ -14,17 +14,17 @@ document.addEventListener("DOMContentLoaded", () => {
     ground.position.y = 0;
     scene.add(ground);
 
-    // Tree function with adjusted scale
+    // Tree function with significantly increased scale
     function createTree(x, z) {
-        const trunkHeight = Math.random() * 4 + 2; // Increased height
-        const trunkRadius = 0.2; // Increased radius for visibility
-        const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.2, trunkHeight, 32);
+        const trunkHeight = Math.random() * 20 + 10; // Substantially increased height
+        const trunkRadius = 1; // Increased radius for visibility
+        const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.5, trunkHeight, 32);
         const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
         const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
         trunk.position.set(x, trunkHeight / 2, z);
 
-        const leavesHeight = Math.random() * 2 + 1; // Increased height
-        const leavesRadius = 1; // Increased radius for a larger canopy
+        const leavesHeight = Math.random() * 10 + 5; // Increased height for leaves
+        const leavesRadius = 4; // Increased radius for a larger canopy
         const leavesGeometry = new THREE.ConeGeometry(leavesRadius, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
@@ -42,13 +42,13 @@ document.addEventListener("DOMContentLoaded", () => {
     let trees = [];
     const treeCount = 5000;
     for (let i = 0; i < treeCount; i++) {
-        const x = THREE.MathUtils.randFloatSpread(3200);
-        const z = THREE.MathUtils.randFloatSpread(-8000, -4000);
+        const x = THREE.MathUtils.randFloatSpread(3200); // Spread within the ground area
+        const z = THREE.MathUtils.randFloatSpread(-8000, -4000); // Extended spread towards the horizon
         trees.push(createTree(x, z));
     }
 
-    // Adjusting camera perspective
-    camera.position.set(0, 500, 1000);
+    // Adjusting camera perspective to better capture the scale of the trees
+    camera.position.set(0, 200, 500); // Lower and closer to the ground for a better view of the trees
     camera.lookAt(0, 0, 0);
 
     // Animation loop for moving trees to create the illusion of forward movement
