@@ -20,13 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.2, trunkHeight, 32);
         const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
         const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-        trunk.position.set(x, 0, z); // Adjusted for correct ground positioning
+        trunk.position.set(x, 0, z);
 
         const leavesHeight = Math.random() * 1 + 0.5;
         const leavesGeometry = new THREE.ConeGeometry(0.5, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-        leaves.position.set(x, trunkHeight, z); // Adjusted for correct ground positioning
+        leaves.position.set(x, trunkHeight, z);
 
         const tree = new THREE.Group();
         tree.add(trunk);
@@ -38,19 +38,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Trees array and recycling logic
     let trees = [];
-    const treeCount = 20000; // Significantly increased number of trees
+    const treeCount = 20000; // Number of trees
     for (let i = 0; i < treeCount; i++) {
         const x = THREE.MathUtils.randFloatSpread(800); // Spread within the ground area
-        const z = THREE.MathUtils.randFloatSpread(-500); // Initial placement
+        const z = THREE.MathUtils.randFloatSpread(-1000, -500); // Extended spread towards the horizon
         trees.push(createTree(x, z));
     }
 
     function resetTree(tree) {
         tree.position.x = THREE.MathUtils.randFloatSpread(800);
-        tree.position.z = -500; // Reset back to the horizon
+        tree.position.z = -1000; // Reset further back on the horizon
     }
-
-    // Starry sky (unchanged, assuming star code remains the same)
 
     camera.position.set(0, 50, 100);
     camera.lookAt(0, 0, 0);
@@ -62,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Move trees towards the camera for the illusion of forward movement
         trees.forEach(tree => {
             tree.position.z += 2; // Adjust speed as needed
-            if (tree.position.z > 100) { // Reset when trees hit the bottom of the window
+            if (tree.position.z > 200) { // Reset when trees are well beyond the camera's view
                 resetTree(tree); // Recycle trees for a smooth infinite terrain illusion
             }
         });
