@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    // Adjust the camera position to better frame the ground and the sky
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
+    // Position the camera to a higher point and angle it downwards
     camera.position.set(0, 1500, 1500);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(new THREE.Vector3(0, 0, -2000)); // Look at a point further down the z-axis
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setClearColor(0x000000); // Set background color to black
@@ -35,8 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const tree = new THREE.Group();
         tree.add(trunk);
         tree.add(leaves);
-        // Adjust tree spawn point to the halfway point of the window
-        tree.position.set(THREE.MathUtils.randFloatSpread(7000), 0, THREE.MathUtils.randFloat(-4000, 0));
+        tree.position.set(THREE.MathUtils.randFloatSpread(7000), 0, THREE.MathUtils.randFloatSpread(-8000, -4000));
 
         return tree;
     }
@@ -69,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
         trees.forEach(tree => {
             tree.position.z += 5;
             if (tree.position.z > 500) {
-                tree.position.z = THREE.MathUtils.randFloat(-4000, 0); // Reset tree position
+                tree.position.z = THREE.MathUtils.randFloatSpread(-8000, -4000); // Reset tree position
             }
         });
 
@@ -78,3 +77,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     animate();
 });
+
