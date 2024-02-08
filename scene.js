@@ -1,5 +1,16 @@
-        // Scene setup
-        const scene = new THREE.Scene();
+
+// Dynamically load Three.js
+var script = document.createElement('script');
+script.src = 'https://threejs.org/build/three.js';
+script.onload = function() {
+    // Initialize your scene after Three.js has loaded
+    initScene();
+};
+document.head.appendChild(script);
+
+function initScene() {
+    // Scene setup
+    const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -43,4 +54,4 @@
         }
 
         animate();
-   
+}  
