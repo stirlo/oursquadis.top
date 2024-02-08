@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -27,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const leavesGeometry = new THREE.ConeGeometry(0.5, leavesHeight, 32);
         const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
         const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-        leaves.position.set(x, trunkHeight + leavesHeight / 2, z);
+        leaves.position.set(x, trunkHeight + leavesHeight, z); // Adjusted to sit on top of the trunk
         scene.add(leaves);
     }
 
@@ -46,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const starsCount = 5000;
     for (let i = 0; i < starsCount; i++) {
         const x = THREE.MathUtils.randFloatSpread(2000);
-        const y = THREE.MathUtils.randFloat(300, 600); // Ensure stars are well above the ground
+        const y = THREE.MathUtils.randFloat(50, 1000); // Expanded to fill more of the sky
         const z = THREE.MathUtils.randFloatSpread(2000);
         starVertices.push(x, y, z);
     }
