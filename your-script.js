@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Trees array and recycling logic
     let trees = [];
-    const treeCount = 20000; // Number of trees
+    const treeCount = 10000; // Halved number of trees to improve performance
     for (let i = 0; i < treeCount; i++) {
         const x = THREE.MathUtils.randFloatSpread(800); // Spread within the ground area
         const z = THREE.MathUtils.randFloatSpread(-1000, -500); // Extended spread towards the horizon
