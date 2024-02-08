@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", () => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -16,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Ground
-    const groundGeometry = new THREE.PlaneGeometry(400, 400);
+    const groundGeometry = new THREE.PlaneGeometry(500, 500);
     const groundMaterial = new THREE.MeshBasicMaterial({ color: colors.ground });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2; // Rotate to lay flat
@@ -58,10 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Create forest, rocks, and bushes
-    const elements = 1000;
+    const elements = 1000; // Increased number of elements
     for (let i = 0; i < elements; i++) {
-        const x = THREE.MathUtils.randFloatSpread(400); // Spread elements across the ground
-        const z = THREE.MathUtils.randFloatSpread(400);
+        const x = THREE.MathUtils.randFloatSpread(500); // Increased spread
+        const z = THREE.MathUtils.randFloatSpread(500);
         const elementType = Math.random();
         if (elementType < 0.5) {
             createTree(x, z);
@@ -75,12 +76,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Starry sky
     const starGeometry = new THREE.SphereGeometry(0.05, 24, 24);
     const starMaterial = new THREE.MeshBasicMaterial({ color: colors.star });
-    const stars = 1000;
+    const stars = 2000; // Increased number of stars for better visibility
     for (let i = 0; i < stars; i++) {
         const star = new THREE.Mesh(starGeometry, starMaterial);
-        const x = THREE.MathUtils.randFloatSpread(200);
-        const y = THREE.MathUtils.randFloat(100, 200); // Keep stars in the top third
-        const z = THREE.MathUtils.randFloatSpread(200);
+        const x = THREE.MathUtils.randFloatSpread(1000); // Wider spread
+        const y = THREE.MathUtils.randFloat(200, 300); // Positioned higher
+        const z = THREE.MathUtils.randFloatSpread(100); 
         star.position.set(x, y, z);
         scene.add(star);
     }
