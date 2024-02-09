@@ -13,7 +13,7 @@ function initScene() {
     const planetTextures = [
         '8k_mercury.jpg', // Mercury
         '8k_venus_surface.jpg', // Venus
-        '2k_earth_daymap', // Earth
+        '2k_earth_daymap.jpg', // Earth
         '8k_mars.jpg', // Mars
         '8k_jupiter.jpg', // Jupiter
         '8k_sun.jpg', // Sun
