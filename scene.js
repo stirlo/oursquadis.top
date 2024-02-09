@@ -1,5 +1,3 @@
-
-
 // Import necessary modules from Three.js
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.117.1/build/three.module.js';
 
@@ -25,8 +23,8 @@ function initScene() {
 
     // Milky Way background
     const bgGeometry = new THREE.SphereGeometry(500, 64, 64);
-        const bgTexture = new THREE.TextureLoader().load('https://www.eso.org/public/archives/images/large/eso0932a.jpg'); // Replace 'MilkyWayTextureURL' with the actual texture URL
-  const bgMaterial = new THREE.MeshBasicMaterial({
+    const bgTexture = new THREE.TextureLoader().load('https://www.eso.org/public/archives/images/large/eso0932a.jpg');
+    const bgMaterial = new THREE.MeshBasicMaterial({
         map: bgTexture,
         side: THREE.BackSide
     });
@@ -49,12 +47,9 @@ function initScene() {
     }
 
     animate();
-}
 
-initScene();
-
-// Add click event listener to canvas
-    canvas.addEventListener('click', () => {
+    // Add click event listener to renderer's canvas
+    renderer.domElement.addEventListener('click', () => {
         window.location.href = 'https://stirlo.space';
     });
 
@@ -62,4 +57,6 @@ initScene();
     document.addEventListener('keydown', () => {
         window.location.href = 'https://stirlo.space';
     });
+}
 
+initScene();
