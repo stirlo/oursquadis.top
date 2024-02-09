@@ -11,15 +11,14 @@ function initScene() {
 
     // Array of planet texture URLs
     const planetTextures = [
-        'https://planetpixelemporium.com/download/download.php?mercurymap.jpg', // Mercury
-        'https://threejs.org/examples/textures/planets/venus.jpg', // Venus
+        'https://solarsystem.nasa.gov/system/resources/detail_files/531_PIA17386.jpg', // Mercury
+        'https://upload.wikimedia.org/wikipedia/commons/1/1c/Solarsystemscope_texture_8k_venus_surface.jpg', // Venus
         'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', // Earth
-        'https://threejs.org/examples/textures/planets/mars.jpg', // Mars
-        'https://threejs.org/examples/textures/planets/jupiter.jpg', // Jupiter
-        'https://threejs.org/examples/textures/planets/saturn.jpg', // Saturn
-        'https://threejs.org/examples/textures/planets/uranus.jpg', // Uranus
-        'https://threejs.org/examples/textures/planets/neptune.jpg', // Neptune
-        'https://threejs.org/examples/textures/planets/pluto.jpg' // Pluto
+        'https://www.solarsystemscope.com/textures/download/2k_mars.jpg', // Mars
+        'https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg', // Jupiter
+        'https://www.solarsystemscope.com/textures/download/2k_saturn.jpg', // Saturn
+        'https://www.solarsystemscope.com/textures/download/2k_uranus.jpg', // Uranus
+        'https://www.solarsystemscope.com/textures/download/2k_neptune.jpg', // Neptune
     ];
 
     // Randomly select a planet texture
