@@ -53,7 +53,13 @@ function initScene() {
 
 initScene();
 
-// Redirect on click
-document.addEventListener('click', function() {
-    window.location.href = "https://stirlo.space";
+// Add click event listener to canvas
+    canvas.addEventListener('click', () => {
+        window.location.href = 'https://stirlo.space';
+    });
+
+    // Add keydown event listener to document
+    document.addEventListener('keydown', () => {
+        window.location.href = 'https://stirlo.space';
+    });
 });
