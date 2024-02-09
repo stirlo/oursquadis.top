@@ -11,7 +11,7 @@ function initScene() {
 
     // Array of planet texture URLs
     const planetTextures = [
-        'https://threejs.org/examples/textures/planets/mercury.jpg', // Mercury
+        'https://planetpixelemporium.com/download/download.php?mercurymap.jpg', // Mercury
         'https://threejs.org/examples/textures/planets/venus.jpg', // Venus
         'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', // Earth
         'https://threejs.org/examples/textures/planets/mars.jpg', // Mars
