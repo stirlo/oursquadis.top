@@ -11,14 +11,15 @@ function initScene() {
 
     // Array of planet texture URLs
     const planetTextures = [
-        'https://solarsystem.nasa.gov/system/resources/detail_files/531_PIA17386.jpg', // Mercury
-        'https://upload.wikimedia.org/wikipedia/commons/1/1c/Solarsystemscope_texture_8k_venus_surface.jpg', // Venus
-        'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', // Earth
-        'https://www.solarsystemscope.com/textures/download/2k_mars.jpg', // Mars
-        'https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg', // Jupiter
-        'https://www.solarsystemscope.com/textures/download/2k_saturn.jpg', // Saturn
-        'https://www.solarsystemscope.com/textures/download/2k_uranus.jpg', // Uranus
-        'https://www.solarsystemscope.com/textures/download/2k_neptune.jpg', // Neptune
+        '8k_mercury.jpg', // Mercury
+        '8k_venus_surface.jpg', // Venus
+        '2k_earth_daymap', // Earth
+        'h8k_mars.jpg', // Mars
+        '8k_jupiter.jpg', // Jupiter
+        '8k_sun.jpg', // Sun
+        '8k_moon.jpg', // Moon
+        '2k_uranus.jpg', // Uranus
+        '2k_neptune.jpg', // Neptune
     ];
 
     // Randomly select a planet texture
@@ -38,7 +39,7 @@ function initScene() {
 
     // Milky Way background
     const bgGeometry = new THREE.SphereGeometry(500, 64, 64);
-    const bgTexture = new THREE.TextureLoader().load('https://www.eso.org/public/archives/images/large/eso0932a.jpg');
+    const bgTexture = new THREE.TextureLoader().load('milkyway.jpg');
     const bgMaterial = new THREE.MeshBasicMaterial({
         map: bgTexture,
         side: THREE.BackSide
