@@ -52,3 +52,8 @@ function initScene() {
 }
 
 initScene();
+
+// Redirect on click
+document.addEventListener('click', function() {
+    window.location.href = "https://stirlo.space";
+});
