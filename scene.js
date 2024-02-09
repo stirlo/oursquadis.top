@@ -62,4 +62,4 @@ initScene();
     document.addEventListener('keydown', () => {
         window.location.href = 'https://stirlo.space';
     });
-});
+
