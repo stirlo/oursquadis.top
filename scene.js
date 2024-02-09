@@ -9,12 +9,28 @@ function initScene() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Earth geometry and texture
-    const earthGeometry = new THREE.SphereGeometry(1, 32, 32);
-    const earthTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg');
-    const earthMaterial = new THREE.MeshPhongMaterial({ map: earthTexture });
-    const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-    scene.add(earth);
+    // Array of planet texture URLs
+    const planetTextures = [
+        'https://threejs.org/examples/textures/planets/mercury.jpg', // Mercury
+        'https://threejs.org/examples/textures/planets/venus.jpg', // Venus
+        'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', // Earth
+        'https://threejs.org/examples/textures/planets/mars.jpg', // Mars
+        'https://threejs.org/examples/textures/planets/jupiter.jpg', // Jupiter
+        'https://threejs.org/examples/textures/planets/saturn.jpg', // Saturn
+        'https://threejs.org/examples/textures/planets/uranus.jpg', // Uranus
+        'https://threejs.org/examples/textures/planets/neptune.jpg', // Neptune
+        'https://threejs.org/examples/textures/planets/pluto.jpg' // Pluto
+    ];
+
+    // Randomly select a planet texture
+    const randomTextureUrl = planetTextures[Math.floor(Math.random() * planetTextures.length)];
+
+    // Planet geometry and texture
+    const planetGeometry = new THREE.SphereGeometry(1, 32, 32);
+    const planetTexture = new THREE.TextureLoader().load(randomTextureUrl);
+    const planetMaterial = new THREE.MeshPhongMaterial({ map: planetTexture });
+    const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+    scene.add(planet);
 
     // Lighting
     const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -34,14 +50,14 @@ function initScene() {
     // Camera position
     camera.position.z = 3;
 
-    // Animation: Rotate Earth
+    // Animation: Rotate the planet
     const rotationSpeed = 2 * Math.PI / 60; // One full rotation per minute
 
     function animate() {
         requestAnimationFrame(animate);
 
-        // Rotate Earth
-        earth.rotation.y += rotationSpeed / 60; // Divide by 60 for 60 FPS
+        // Rotate the planet
+        planet.rotation.y += rotationSpeed / 60; // Divide by 60 for 60 FPS
 
         renderer.render(scene, camera);
     }
