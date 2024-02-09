@@ -14,7 +14,7 @@ function initScene() {
         '8k_mercury.jpg', // Mercury
         '8k_venus_surface.jpg', // Venus
         '2k_earth_daymap', // Earth
-        'h8k_mars.jpg', // Mars
+        '8k_mars.jpg', // Mars
         '8k_jupiter.jpg', // Jupiter
         '8k_sun.jpg', // Sun
         '8k_moon.jpg', // Moon
