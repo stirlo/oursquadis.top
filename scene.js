@@ -28,7 +28,7 @@ function initScene() {
     // Planet geometry and texture
     const planetGeometry = new THREE.SphereGeometry(1, 32, 32);
     const planetTexture = new THREE.TextureLoader().load(randomTextureUrl);
-    const planetMaterial = new THREE.MeshPhongMaterial({ map: planetTexture });
+    const planetMaterial = new THREE.MeshBasicMaterial({ map: planetTexture }); // Use MeshBasicMaterial to make it non-reflective
     const planet = new THREE.Mesh(planetGeometry, planetMaterial);
     scene.add(planet);
 
