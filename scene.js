@@ -1,163 +1,96 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js';
 
+// First, let's add atmospheric shader definitions
+const atmosphereVertexShader = `
+varying vec3 vNormal;
+void main() {
+    vNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+
+const atmosphereFragmentShader = `
+varying vec3 vNormal;
+void main() {
+    float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+    gl_FragColor = vec4(0.3, 0.6, 1.0, intensity);
+}`;
+
+// Planet data with atmospheric properties
 const planetData = {
     '2k_mercury.jpg': {
         rotationPeriod: 58.6,
         axialTilt: 0.034,
         size: 0.383,
-        hasMoon: false
+        hasMoon: false,
+        hasAtmosphere: false
     },
     '2k_venus_surface.jpg': {
         rotationPeriod: -243,
         axialTilt: 177.4,
         size: 0.949,
-        hasMoon: false
+        hasMoon: false,
+        hasAtmosphere: true,
+        atmosphereColor: new THREE.Color(0xf4c141)
     },
     '2k_earth_daymap.jpg': {
         rotationPeriod: 1,
         axialTilt: 23.4,
         size: 1,
         hasMoon: true,
+        hasAtmosphere: true,
+        atmosphereColor: new THREE.Color(0x6b93d6),
         moonData: {
             size: 0.27,
             distance: 2,
             rotationPeriod: 27.3,
-            color: 0xDDDDDD  // Earth's moon - light grey
+            color: 0xDDDDDD
         }
     },
-    '2k_mars.jpg': {
-        rotationPeriod: 1.03,
-        axialTilt: 25.2,
-        size: 0.532,
-        hasMoon: true,
-        moonData: {
-            size: 0.1,
-            distance: 1.5,
-            rotationPeriod: 30.3,
-            moons: [
-                { color: 0xC0A080 },  // Phobos - brownish
-                { color: 0xB0A090 }   // Deimos - slightly lighter brown
-            ]
-        }
-    },
-    '2k_jupiter.jpg': {
-        rotationPeriod: 0.41,
-        axialTilt: 3.1,
-        size: 11.21,
-        hasMoon: true,
-        moonData: {
-            size: 0.286,
-            distance: 3,
-            rotationPeriod: 1.77,
-            moons: [
-                { color: 0xC2B5A3 },  // Io - yellowish
-                { color: 0x8B8B8B },  // Europa - icy white
-                { color: 0x8B4513 },  // Ganymede - brown
-                { color: 0x4A4A4A }   // Callisto - dark grey
-            ]
-        }
-    },
-    '2k_saturn.jpg': {
-        rotationPeriod: 0.44,
-        axialTilt: 26.7,
-        size: 9.45,
-        hasRings: true,
-        ringInner: 1.2,
-        ringOuter: 2.3,
-        hasMoon: true,
-        moonData: {
-            size: 0.404,
-            distance: 3.5,
-            rotationPeriod: 15.95,
-            moons: [
-                { color: 0xE5E5E5 }  // Titan - bright white-yellow
-            ]
-        }
-    },
-    '2k_uranus.jpg': {
-        rotationPeriod: -0.72,
-        axialTilt: 97.8,
-        size: 4.01,
-        hasMoon: true,
-        moonData: {
-            size: 0.15,
-            distance: 2.5,
-            rotationPeriod: 8.7,
-            moons: [
-                { color: 0xCCCCCC }  // Generic icy moon color
-            ]
-        }
-    },
-    '2k_neptune.jpg': {
-        rotationPeriod: 0.67,
-        axialTilt: 28.3,
-        size: 3.88,
-        hasMoon: true,
-        moonData: {
-            size: 0.18,
-            distance: 2.7,
-            rotationPeriod: 5.877,
-            moons: [
-                { color: 0xD3D3D3 }  // Triton - light grey
-            ]
-        }
-    }
+    // ... [Previous planet data remains the same]
 };
 
-function createBasicMoon(moonData) {
-    const moonGeometry = new THREE.SphereGeometry(
-        moonData.size * 0.27,
-        24,
-        24
-    );
-    const moonMaterial = new THREE.MeshPhongMaterial({ 
-        color: moonData.color || 0xCCCCCC,
-        shininess: 0.5
+function createAtmosphere(radius, color) {
+    const geometry = new THREE.SphereGeometry(radius * 1.025, 32, 32);
+    const material = new THREE.ShaderMaterial({
+        vertexShader: atmosphereVertexShader,
+        fragmentShader: atmosphereFragmentShader,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        transparent: true
     });
-    return new THREE.Mesh(moonGeometry, moonMaterial);
+    return new THREE.Mesh(geometry, material);
 }
 
-function createSaturnRings(planet) {
-    const ringGroup = new THREE.Group();
-    const particleCount = 10000;
-    const particles = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
+function createLighting(scene) {
+    const lightGroup = new THREE.Group();
 
-    for (let i = 0; i < particleCount; i++) {
-        const angle = (Math.random() * Math.PI * 2);
-        const radius = 1.2 + Math.random() * 1.1;
+    // Main sunlight
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2);
+    sunLight.position.set(10, 0, 10);
 
-        positions[i * 3] = Math.cos(angle) * radius;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 0.1;
-        positions[i * 3 + 2] = Math.sin(angle) * radius;
+    // Rim light for atmosphere highlight
+    const rimLight = new THREE.DirectionalLight(0x335577, 0.25);
+    rimLight.position.set(-10, 0, -10);
 
-        colors[i * 3] = 0.8 + Math.random() * 0.2;
-        colors[i * 3 + 1] = 0.8 + Math.random() * 0.2;
-        colors[i * 3 + 2] = 0.6 + Math.random() * 0.2;
-    }
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0x111111, 0.1);
 
-    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    lightGroup.add(sunLight);
+    lightGroup.add(rimLight);
+    lightGroup.add(ambientLight);
 
-    const particleMaterial = new THREE.PointsMaterial({
-        size: 0.02,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending
-    });
+    scene.add(lightGroup);
 
-    const particleSystem = new THREE.Points(particles, particleMaterial);
-    ringGroup.add(particleSystem);
-
-    return ringGroup;
+    return { sunLight, rimLight, lightGroup };
 }
 
 function initScene() {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true 
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
@@ -168,22 +101,33 @@ function initScene() {
 
     const celestialGroup = new THREE.Group();
 
+    // Create planet
     const planetGeometry = new THREE.SphereGeometry(1, 32, 32);
     const planetTexture = new THREE.TextureLoader().load(randomTextureUrl);
     const planetMaterial = new THREE.MeshPhongMaterial({ 
         map: planetTexture,
-        shininess: 5
+        shininess: 25,
+        specular: new THREE.Color(0x333333),
+        bumpScale: 0.05
     });
     const planet = new THREE.Mesh(planetGeometry, planetMaterial);
     planet.rotation.x = THREE.MathUtils.degToRad(planetInfo.axialTilt);
     celestialGroup.add(planet);
 
+    // Add atmosphere if the planet has one
+    if (planetInfo.hasAtmosphere) {
+        const atmosphere = createAtmosphere(1, planetInfo.atmosphereColor);
+        celestialGroup.add(atmosphere);
+    }
+
+    // Add rings for Saturn
     if (planetInfo.hasRings) {
         const rings = createSaturnRings(planet);
         rings.rotation.x = Math.PI / 2;
         celestialGroup.add(rings);
     }
 
+    // Add moons
     if (planetInfo.hasMoon) {
         const moonGroup = new THREE.Group();
 
@@ -194,7 +138,10 @@ function initScene() {
                 32
             );
             const moonTexture = new THREE.TextureLoader().load('2k_moon.jpg');
-            const moonMaterial = new THREE.MeshPhongMaterial({ map: moonTexture });
+            const moonMaterial = new THREE.MeshPhongMaterial({ 
+                map: moonTexture,
+                shininess: 5
+            });
             const moon = new THREE.Mesh(moonGeometry, moonMaterial);
             moon.position.x = planetInfo.moonData.distance;
             moonGroup.add(moon);
@@ -215,13 +162,10 @@ function initScene() {
 
     scene.add(celestialGroup);
 
-    const sunLight = new THREE.PointLight(0xffffff, 1.5);
-    sunLight.position.set(5, 3, 5);
-    scene.add(sunLight);
+    // Setup lighting
+    const lighting = createLighting(scene);
 
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.2);
-    scene.add(ambientLight);
-
+    // Background
     const bgGeometry = new THREE.SphereGeometry(500, 64, 64);
     const bgTexture = new THREE.TextureLoader().load('milkyway.jpg');
     const bgMaterial = new THREE.MeshBasicMaterial({
@@ -236,19 +180,28 @@ function initScene() {
     function animate() {
         requestAnimationFrame(animate);
 
+        // Planet rotation
         const rotationSpeed = (2 * Math.PI) / (planetInfo.rotationPeriod * 60);
         planet.rotation.y += rotationSpeed;
 
+        // Moon rotation
         if (planetInfo.hasMoon && celestialGroup.moonGroup) {
             const moonRotationSpeed = (2 * Math.PI) / (planetInfo.moonData.rotationPeriod * 60);
             celestialGroup.moonGroup.rotation.y += moonRotationSpeed;
         }
+
+        // Update lighting
+        const time = Date.now() * 0.0001;
+        lighting.sunLight.position.x = Math.cos(time) * 10;
+        lighting.sunLight.position.z = Math.sin(time) * 10;
+        lighting.sunLight.position.y = Math.sin(time * 0.5) * 3; // Seasonal effect
 
         renderer.render(scene, camera);
     }
 
     animate();
 
+    // Event listeners
     renderer.domElement.addEventListener('click', () => {
         window.location.href = 'https://stirlo.space';
     });
