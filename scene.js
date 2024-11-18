@@ -1,61 +1,4 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
-// Scene Setup
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-document.body.appendChild(renderer.domElement);
-
-// Controls
-const controls = new OrbitControls(camera, renderer.domElement);
-camera.position.set(0, 100, 200);
-controls.update();
-
-// Planet Data with correct texture names
-const planetData = {
-    '2k_mercury.jpg': {
-        rotationPeriod: 58.6,
-        axialTilt: 0.034,
-        size: 0.383,
-        hasRings: false,
-        hasMoon: false,
-        hasAtmosphere: false
-    },
-    '2k_venus_surface.jpg': {
-        rotationPeriod: -243,
-        axialTilt: 177.4,
-        size: 0.949,
-        hasRings: false,
-        hasMoon: false,
-        hasAtmosphere: true,
-        atmosphereColor: new THREE.Color(0xFFA500),
-        atmosphereSize: 1.05
-    },
-    '2k_earth_daymap.jpg': {
-        rotationPeriod: 1,
-        axialTilt: 23.5,
-        size: 1,
-        hasRings: false,
-        hasMoon: true,
-        hasAtmosphere: true,
-        atmosphereColor: new THREE.Color(0x6B8CFF),
-        atmosphereSize: 1.02,
-        moonData: {
-            moons: [{
-                name: 'Moon',
-                size: 0.2724,
-                distance: 2,
-                rotationPeriod: 27.3,
-                inclination: 5.145,
-                color: 0xDDDDDD,
-                startAngle: Math.random() * Math.PI * 2
-            }]
-        }
-    },
-    // ... continuing with the rest of your detailed planet data
+// Imports and Initial Setup
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
@@ -93,16 +36,13 @@ const sunFragmentShader = `
         float intensity = pow(0.7 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
         vec3 sunColor = vec3(1.0, 0.6, 0.1);
         vec3 atmosphereColor = vec3(1.0, 0.6, 0.1);
-
-        // Time-based noise for surface variation
         float noise = sin(vUv.x * 10.0 + time) * sin(vUv.y * 10.0 + time) * 0.1;
-
         vec3 finalColor = mix(sunColor, atmosphereColor, intensity + noise);
         gl_FragColor = vec4(finalColor, 1.0);
     }
 `;
-
-// Planet Data with correct texture names
+// =============== START PART 2 OF 4 ===============
+// Planet Data with correct texture names and properties
 const planetData = {
     '2k_mercury.jpg': {
         rotationPeriod: 58.6,
@@ -297,7 +237,7 @@ const planetData = {
         }
     }
 };
-
+// =============== START PART 3 OF 4 ===============
 // Helper Functions
 function createSun() {
     const sunGeometry = new THREE.SphereGeometry(20, 64, 64);
@@ -325,7 +265,7 @@ function createSun() {
 
     return sun;
 }
-// Planet Creation Functions
+
 function createPlanet(texture, data, orbitRadius) {
     const group = new THREE.Group();
     const textureLoader = new THREE.TextureLoader();
@@ -402,7 +342,6 @@ function createPlanet(texture, data, orbitRadius) {
             moonOrbit.rotation.x = THREE.MathUtils.degToRad(moonData.inclination);
             moonOrbit.add(moon);
 
-            // Position moon
             moon.position.x = moonData.distance;
             moon.userData.rotationSpeed = 2 * Math.PI / (moonData.rotationPeriod * 24);
             moon.userData.startAngle = moonData.startAngle;
@@ -423,13 +362,13 @@ function createPlanet(texture, data, orbitRadius) {
     orbitLine.rotation.x = Math.PI / 2;
     group.add(orbitLine);
 
-    // Add planet to group
     group.add(planet);
     planet.userData.rotationSpeed = 2 * Math.PI / (data.rotationPeriod * 24);
 
     return { group, planet };
 }
 
+// =============== START PART 4 OF 4 ===============
 // Create Milky Way background
 function createGalaxyBackground() {
     const textureLoader = new THREE.TextureLoader();
