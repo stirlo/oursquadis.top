@@ -1,6 +1,8 @@
 // Imports and Initial Setup
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// Imports and Initial Setup
+import * as THREE from './three.module.js';
+import { OrbitControls } from './OrbitControls.js';
+
 
 // Scene setup
 const scene = new THREE.Scene();
