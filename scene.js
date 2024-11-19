@@ -1,6 +1,6 @@
 // ===== SECTION: IMPORTS AND SETUP =====
-import * as THREE from './three.module.js';
-import { OrbitControls } from './OrbitControls.js';
+import * as THREE from 'three.module.js';
+import { OrbitControls } from 'OrbitControls.js';
 
 // Renderer setup with HDR
 const renderer = new THREE.WebGLRenderer({ 
