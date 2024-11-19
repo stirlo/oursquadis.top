@@ -1,7 +1,12 @@
 // ===== SECTION: IMPORTS =====
-import * as THREE from 'https://oursquadis.top/three.module.js';
-import { OrbitControls } from 'https://oursquadis.top/OrbitControls.js';
+//import * as THREE from 'https://oursquadis.top/three.module.js';
+//import { OrbitControls } from 'https://oursquadis.top/OrbitControls.js';
+//import { gsap } from 'https://oursquadis.top/gsap.min.js';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 import { gsap } from 'https://oursquadis.top/gsap.min.js';
+//testing remote hosting to rule out strange cache or whatever issue 
+
 // ===== END SECTION: IMPORTS =====
 
 // ===== SECTION: CONFIGURATIONS =====
