@@ -1,7 +1,7 @@
 // ===== SECTION: IMPORTS =====
-import * as THREE from './three.module.js';
-import { OrbitControls } from './OrbitControls.js';
-import { gsap } from './gsap.min.js';
+import * as THREE from 'https://oursquadis.top/three.module.js';
+import { OrbitControls } from 'https://oursquadis.top/OrbitControls.js';
+import { gsap } from 'https://oursquadis.top/gsap.min.js';
 // ===== END SECTION: IMPORTS =====
 
 // ===== SECTION: CONFIGURATIONS =====
