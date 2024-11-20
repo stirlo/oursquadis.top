@@ -504,7 +504,11 @@ function createOrbitLine(radius, THREE) {
     return new THREE.Line(orbitGeometry, orbitMaterial);
 }
 
-// Initialize solar system
+// Initialize celestial bodies
+const celestialBodies = {};
+let time = 0;
+
+// Create all celestial bodies
 async function initializeSolarSystem(THREE, loadTexture) {
     try {
         // Create the sun first
@@ -585,6 +589,9 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+// Event listeners
+window.addEventListener('resize', onWindowResize, false);
+
 // Main initialization function
 async function main() {
     try {
@@ -592,28 +599,12 @@ async function main() {
         const { THREE, OrbitControls } = await loadModules();
         const loadTexture = createTextureLoader(THREE);
 
-        // Initialize scene
-        scene = new THREE.Scene();
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
-
-        // Setup controls
-        controls = new OrbitControls(camera, renderer.domElement);
-        camera.position.set(0, 100, 200);
-        controls.update();
-
         // Initialize configurations
         materialConfigs = initializeMaterialConfigs(THREE);
         celestialData = await initializeCelestialData(THREE);
 
         // Initialize the solar system
         await initializeSolarSystem(THREE, loadTexture);
-
-        // Add event listeners
-        window.addEventListener('resize', onWindowResize, false);
 
         // Start animation
         animate();
