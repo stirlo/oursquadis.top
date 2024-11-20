@@ -5,20 +5,8 @@ let celestialData;
 let time = 0;
 const celestialBodies = {};
 
-// Module loader
-async function loadModules() {
-    try {
-        const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
-        const { OrbitControls } = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js');
-        return { THREE, OrbitControls };
-    } catch (error) {
-        console.error('Failed to load modules:', error);
-        throw error;
-    }
-}
-
 // Texture loader promise wrapper
-function createTextureLoader(THREE) {
+function createTextureLoader() {
     return (url) => {
         return new Promise((resolve, reject) => {
             const loader = new THREE.TextureLoader();
@@ -159,9 +147,8 @@ const starFragmentShader = `
         gl_FragColor = vec4(finalColor, 1.0);
     }
 `;
-
 // Celestial Body Data
-async function initializeCelestialData(THREE) {
+async function initializeCelestialData() {
     return {
         '2k_sun.jpg': {
             rotationPeriod: 27,
@@ -232,13 +219,13 @@ async function initializeCelestialData(THREE) {
             hasMoon: true,
             moons: [
                 {
-                    texture: 'phobos',  // removed .jpg extension
+                    texture: 'phobos',
                     size: 0.005,
                     distance: 1.4,
                     rotationPeriod: 0.32
                 },
                 {
-                    texture: 'deimos',  // removed .jpg extension
+                    texture: 'deimos',
                     size: 0.003,
                     distance: 1.8,
                     rotationPeriod: 1.26
@@ -266,7 +253,7 @@ async function initializeCelestialData(THREE) {
 }
 
 // Material configurations
-function initializeMaterialConfigs(THREE) {
+function initializeMaterialConfigs() {
     return {
         star: {
             emissive: new THREE.Color(0xFFFF00),
@@ -284,9 +271,8 @@ function initializeMaterialConfigs(THREE) {
         }
     };
 }
-
 // Helper Functions and Object Creation
-async function createStar(textureFile, data, THREE, loadTexture) {
+async function createStar(textureFile, data, loadTexture) {
     const group = new THREE.Group();
 
     try {
@@ -354,7 +340,7 @@ async function createStar(textureFile, data, THREE, loadTexture) {
     }
 }
 
-async function createPlanet(textureFile, data, orbitRadius, THREE, loadTexture) {
+async function createPlanet(textureFile, data, orbitRadius, loadTexture) {
     const group = new THREE.Group();
 
     try {
@@ -412,7 +398,7 @@ async function createPlanet(textureFile, data, orbitRadius, THREE, loadTexture) 
         // Create moons if planet has them
         if (data.hasMoon && data.moons) {
             for (const moonData of data.moons) {
-                const moonGroup = await createMoon(moonData, data.size, THREE, loadTexture);
+                const moonGroup = await createMoon(moonData, data.size, loadTexture);
                 planet.add(moonGroup.group);
             }
         }
@@ -428,8 +414,7 @@ async function createPlanet(textureFile, data, orbitRadius, THREE, loadTexture) 
         throw error;
     }
 }
-
-async function createMoon(moonData, planetSize, THREE, loadTexture) {
+async function createMoon(moonData, planetSize, loadTexture) {
     const group = new THREE.Group();
 
     try {
@@ -450,7 +435,7 @@ async function createMoon(moonData, planetSize, THREE, loadTexture) {
             };
 
             moonMaterial = new THREE.MeshStandardMaterial({
-                color: moonColors[moonData.texture.replace('2k_', '').replace('.jpg', '')] || 0x888888,
+                color: moonColors[moonData.texture] || 0x888888,
                 roughness: 0.8,
                 metalness: 0.1
             });
@@ -473,9 +458,8 @@ async function createMoon(moonData, planetSize, THREE, loadTexture) {
     }
 }
 
-
 // Create orbit lines
-function createOrbitLine(radius, THREE) {
+function createOrbitLine(radius) {
     const segments = 128;
     const orbitGeometry = new THREE.BufferGeometry();
     const points = [];
@@ -501,10 +485,10 @@ function createOrbitLine(radius, THREE) {
 }
 
 // Create all celestial bodies
-async function initializeSolarSystem(THREE, loadTexture) {
+async function initializeSolarSystem(loadTexture) {
     try {
         // Create the sun first
-        const sunData = await createStar('2k_sun.jpg', celestialData['2k_sun.jpg'], THREE, loadTexture);
+        const sunData = await createStar('2k_sun.jpg', celestialData['2k_sun.jpg'], loadTexture);
         celestialBodies.sun = sunData;
         scene.add(sunData.group);
 
@@ -512,11 +496,11 @@ async function initializeSolarSystem(THREE, loadTexture) {
         for (const [texture, data] of Object.entries(celestialData)) {
             if (!data.isStar) {
                 // Create orbit line
-                const orbitLine = createOrbitLine(data.orbitDistance, THREE);
+                const orbitLine = createOrbitLine(data.orbitDistance);
                 scene.add(orbitLine);
 
                 // Create planet
-                const planetData = await createPlanet(texture, data, data.orbitDistance, THREE, loadTexture);
+                const planetData = await createPlanet(texture, data, data.orbitDistance, loadTexture);
                 celestialBodies[texture] = planetData;
                 scene.add(planetData.group);
             }
@@ -573,7 +557,6 @@ function animate() {
     // Render scene
     renderer.render(scene, camera);
 }
-
 // Handle window resize
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -587,9 +570,8 @@ window.addEventListener('resize', onWindowResize, false);
 // Main initialization function
 async function main() {
     try {
-        // Load modules first
-        const { THREE, OrbitControls } = await loadModules();
-        const loadTexture = createTextureLoader(THREE);
+        // Create texture loader
+        const loadTexture = createTextureLoader();
 
         // Scene setup
         scene = new THREE.Scene();
@@ -605,11 +587,11 @@ async function main() {
         controls.update();
 
         // Initialize configurations
-        materialConfigs = initializeMaterialConfigs(THREE);
-        celestialData = await initializeCelestialData(THREE);
+        materialConfigs = initializeMaterialConfigs();
+        celestialData = await initializeCelestialData();
 
         // Initialize the solar system
-        await initializeSolarSystem(THREE, loadTexture);
+        await initializeSolarSystem(loadTexture);
 
         // Start animation
         animate();
