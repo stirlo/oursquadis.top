@@ -232,13 +232,13 @@ async function initializeCelestialData(THREE) {
             hasMoon: true,
             moons: [
                 {
-                    texture: '2k_phobos.jpg',
+                    texture: 'phobos',  // removed .jpg extension
                     size: 0.005,
                     distance: 1.4,
                     rotationPeriod: 0.32
                 },
                 {
-                    texture: '2k_deimos.jpg',
+                    texture: 'deimos',  // removed .jpg extension
                     size: 0.003,
                     distance: 1.8,
                     rotationPeriod: 1.26
@@ -433,12 +433,28 @@ async function createMoon(moonData, planetSize, THREE, loadTexture) {
     const group = new THREE.Group();
 
     try {
-        const texture = await loadTexture(moonData.texture);
+        let moonMaterial;
 
-        const moonMaterial = new THREE.MeshStandardMaterial({
-            map: texture,
-            ...materialConfigs.planet
-        });
+        // If it's Earth's moon, use the texture
+        if (moonData.texture === '2k_moon.jpg') {
+            const texture = await loadTexture(moonData.texture);
+            moonMaterial = new THREE.MeshStandardMaterial({
+                map: texture,
+                ...materialConfigs.planet
+            });
+        } else {
+            // For other moons, use basic colored materials
+            const moonColors = {
+                'phobos': 0x847e77,  // Grayish-brown
+                'deimos': 0x9b9389   // Light gray-brown
+            };
+
+            moonMaterial = new THREE.MeshStandardMaterial({
+                color: moonColors[moonData.texture.replace('2k_', '').replace('.jpg', '')] || 0x888888,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+        }
 
         const moonGeometry = new THREE.SphereGeometry(moonData.size, 32, 32);
         const moon = new THREE.Mesh(moonGeometry, moonMaterial);
@@ -456,6 +472,7 @@ async function createMoon(moonData, planetSize, THREE, loadTexture) {
         throw error;
     }
 }
+
 
 // Create orbit lines
 function createOrbitLine(radius, THREE) {
