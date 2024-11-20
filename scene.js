@@ -301,12 +301,7 @@ function initializeMaterialConfigs(THREE) {
     };
 }
 
-// Initialize state variables
-let scene, camera, renderer, controls;
-let celestialBodies = {};
-let time = 0;
-let materialConfigs;
-let celestialData;
+
 // Helper Functions and Object Creation
 async function createStar(textureFile, data, THREE, loadTexture) {
     const group = new THREE.Group();
