@@ -1,6 +1,6 @@
-import * as THREE from 'three.module.js';
-import { OrbitControls } from 'OrbitControls.js';
-import { gsap } from 'gsap.min.js';
+import * as THREE from './three.module.js';
+import { OrbitControls } from './OrbitControls.js';
+import { gsap } from './gsap.min.js';
 
 
 // Scene setup
