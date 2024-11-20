@@ -1,106 +1,59 @@
-// ===== SECTION: IMPORTS =====
-//import * as THREE from 'https://oursquadis.top/three.module.js';
-//import { OrbitControls } from 'https://oursquadis.top/OrbitControls.js';
-//import { gsap } from 'https://oursquadis.top/gsap.min.js';
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-import { gsap } from 'https://oursquadis.top/gsap.min.js';
-//testing remote hosting to rule out strange cache or whatever issue 
+import * as THREE from 'three.module.js';
+import { OrbitControls } from 'OrbitControls.js';
+import { gsap } from 'gsap.min.js';
 
-// ===== END SECTION: IMPORTS =====
 
-// ===== SECTION: CONFIGURATIONS =====
-const materialConfigs = {
-    planet: {
-        roughness: 0.7,
-        metalness: 0.3
-    },
-    atmosphere: {
-        transparent: true,
-        opacity: 0.3,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-    },
-    rings: {
-        basic: {
-            transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide,
-            depthWrite: false
-        }
-    }
-};
-
-const ringConfigs = {
-    saturn: {
-        divisions: [
-            {
-                innerRadius: 1.5,
-                outerRadius: 2.3,
-                density: 0.8,
-                color: 0xA88B5D,
-                particleSize: 0.05
-            },
-            {
-                innerRadius: 1.8,
-                outerRadius: 2.1,
-                density: 0.6,
-                color: 0x907A4F,
-                particleSize: 0.03
-            }
-        ],
-        particleCount: 10000,
-        randomness: 0.2
-    }
-};
-
-// ===== SECTION: BASIC SETUP =====
-// Renderer setup with HDR
-const renderer = new THREE.WebGLRenderer({ 
-    antialias: true,
-    powerPreference: "high-performance",
-    logarithmicDepthBuffer: true
-});
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.8;
-renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
-
-// Scene and Camera
+// Scene setup
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-camera.position.set(0, 100, 200);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
 
-// Controls
+// Camera and controls setup
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.maxDistance = 1000;
-controls.minDistance = 20;
-// ===== END SECTION: BASIC SETUP =====
-// ===== SECTION: SHADER DEFINITIONS =====
-const noise3D = `
-    // GLSL noise functions
-    vec3 mod289(vec3 x) {
-        return x - floor(x * (1.0 / 289.0)) * 289.0;
-    }
+camera.position.set(0, 100, 200);
+controls.update();
 
-    vec4 mod289(vec4 x) {
-        return x - floor(x * (1.0 / 289.0)) * 289.0;
-    }
+// Base shaders
+const standardVertexShader = `
+    varying vec2 vUv;
+    varying vec3 vNormal;
 
-    vec4 permute(vec4 x) {
-        return mod289(((x*34.0)+1.0)*x);
+    void main() {
+        vUv = uv;
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
+`;
 
-    vec4 taylorInvSqrt(vec4 r) {
-        return 1.79284291400159 - 0.85373472095314 * r;
+const starVertexShader = `
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vPosition;
+
+    void main() {
+        vUv = uv;
+        vNormal = normalize(normalMatrix * normal);
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
+`;
+
+const starFragmentShader = `
+    uniform float time;
+    uniform float temperature;
+    uniform float intensity;
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vPosition;
+
+    // Improved noise function for better turbulence
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+    vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
 
     float snoise(vec3 v) {
         const vec2 C = vec2(1.0/6.0, 1.0/3.0);
@@ -161,107 +114,43 @@ const noise3D = `
         m = m * m;
         return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
     }
-`;
-
-const starVertexShader = `
-    varying vec2 vUv;
-    varying vec3 vNormal;
 
     void main() {
-        vUv = uv;
-        vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-`;
+        // Enhanced surface turbulence
+        float turbulence = snoise(vPosition * 0.05 + time * 0.1) * 0.5 + 0.5;
 
-const starFragmentShader = `
-    uniform float time;
-    uniform float temperature;
-    uniform float intensity;
-    uniform sampler2D texture;
+        // Dynamic solar flares
+        float flare = pow(snoise(vPosition + time * 0.2), 3.0) * 2.0;
 
-    varying vec2 vUv;
-    varying vec3 vNormal;
+        // Enhanced corona effect
+        float corona = pow(0.5 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
 
-    vec3 blackbodyRadiation(float temp) {
-        vec3 color;
-        temp = clamp(temp, 1000.0, 40000.0);
-        temp = temp / 100.0;
+        // Temperature-based color
+        vec3 hotColor = vec3(1.0, 0.6, 0.1);
+        vec3 coolColor = vec3(1.0, 0.4, 0.0);
+        vec3 baseColor = mix(coolColor, hotColor, temperature / 6000.0);
 
-        if (temp <= 66.0) {
-            color.r = 1.0;
-            color.g = log(temp) * 0.2 - 0.5;
-        } else {
-            color.r = pow(temp - 60.0, -0.1);
-            color.g = pow(temp - 60.0, -0.08);
-        }
+        // Nuclear fusion glow effect
+        float fusionGlow = snoise(vPosition * 0.1 + time * 0.05) * 0.5 + 0.5;
 
-        if (temp >= 66.0) {
-            color.b = 1.0;
-        } else if (temp <= 19.0) {
-            color.b = 0.0;
-        } else {
-            color.b = log(temp - 10.0) * 0.3 - 0.75;
-        }
+        // Combine all effects
+        vec3 finalColor = mix(baseColor, vec3(1.0, 0.8, 0.3), 
+                            corona * 0.5 + turbulence * 0.3 + flare + fusionGlow * 0.2);
 
-        return clamp(color, 0.0, 1.0);
-    }
-
-    void main() {
-        vec4 texColor = texture2D(texture, vUv);
-        vec3 bbColor = blackbodyRadiation(temperature);
-
-        float surfaceDetail = texColor.r;
-        float limb = pow(max(0.0, dot(vNormal, vec3(0.0, 0.0, 1.0))), 0.6);
-        float granulation = snoise(vec3(vUv * 100.0, time * 0.1)) * 0.1;
-
-        vec3 finalColor = bbColor * (surfaceDetail + granulation) * limb * intensity;
+        // Add intensity variation
+        finalColor *= (1.0 + sin(time * 0.5) * 0.1);
 
         gl_FragColor = vec4(finalColor, 1.0);
     }
 `;
-
-const coronaVertexShader = `
-    varying vec3 vNormal;
-    varying vec3 vWorldPosition;
-
-    void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-`;
-
-const coronaFragmentShader = `
-    uniform float time;
-    uniform float intensity;
-
-    varying vec3 vNormal;
-    varying vec3 vWorldPosition;
-
-    ${noise3D}
-
-    void main() {
-        float corona = pow(0.5 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
-        float noise = snoise(vec3(vWorldPosition.xy * 0.01, time * 0.1));
-        float flare = snoise(vec3(vWorldPosition.xy * 0.02, time * 0.2 + 1000.0));
-
-        corona *= 1.0 + noise * 0.5 + flare * 0.3;
-        corona *= intensity;
-
-        vec3 color = mix(vec3(1.0, 0.4, 0.0), vec3(1.0, 0.8, 0.4), corona);
-
-        gl_FragColor = vec4(color, corona * 0.5);
-    }
-`;
-// ===== END SECTION: SHADER DEFINITIONS =====
-// ===== SECTION: CELESTIAL DATA =====
+// =============== END PART 1 OF 4 ===============
+// =============== START PART 2 OF 4 ===============
+// Celestial Body Data
 const celestialData = {
     '2k_sun.jpg': {
         rotationPeriod: 27,
         axialTilt: 7.25,
-        size: 109,
+        size: 109,  // Relative to Earth
         isStar: true,
         hasRings: false,
         hasMoon: false,
@@ -269,14 +158,12 @@ const celestialData = {
         atmosphereColor: new THREE.Color(0xFF4500),
         atmosphereSize: 1.15,
         starData: {
-            temperature: 5778,
-            luminosity: 5.0,
+            temperature: 5778, // Kelvin
+            luminosity: 1.0,   // Solar luminosity
             coronaData: {
-                intensity: 8.0,
+                intensity: 2.0,
                 pulseSpeed: 0.5,
-                flareFrequency: 0.2,
-                flareIntensity: 2.0,
-                coronaSize: 1.5
+                flareFrequency: 0.2
             }
         }
     },
@@ -313,9 +200,7 @@ const celestialData = {
             texture: '2k_moon.jpg',
             size: 0.273,
             distance: 2,
-            rotationPeriod: 27.3,
-            roughness: 0.8,
-            metalness: 0.1
+            rotationPeriod: 27.3
         }],
         hasAtmosphere: true,
         atmosphereColor: new THREE.Color(0x4B87FF),
@@ -331,20 +216,16 @@ const celestialData = {
         hasMoon: true,
         moons: [
             {
-                color: 0x847e87,
+                texture: '2k_phobos.jpg',
                 size: 0.005,
                 distance: 1.4,
-                rotationPeriod: 0.32,
-                roughness: 0.9,
-                metalness: 0.1
+                rotationPeriod: 0.32
             },
             {
-                color: 0x9c9691,
+                texture: '2k_deimos.jpg',
                 size: 0.003,
                 distance: 1.8,
-                rotationPeriod: 1.26,
-                roughness: 0.9,
-                metalness: 0.1
+                rotationPeriod: 1.26
             }
         ],
         hasAtmosphere: true,
@@ -364,217 +245,121 @@ const celestialData = {
         atmosphereColor: new THREE.Color(0xFFAB5B),
         atmosphereSize: 1.05,
         orbitDistance: 110
+    }
+    // Additional planets can be added following the same pattern
+};
+
+// Material configurations
+const materialConfigs = {
+    star: {
+        emissive: new THREE.Color(0xFFFF00),
+        emissiveIntensity: 1.0,
+        transparent: true,
+        opacity: 1.0
     },
-    '2k_saturn.jpg': {
-        rotationPeriod: 0.445,
-        axialTilt: 26.73,
-        size: 9.449,
-        isStar: false,
-        hasRings: true,
-        useDetailedRings: true,
-        hasMoon: true,
-        hasAtmosphere: true,
-        atmosphereColor: new THREE.Color(0xFFF5E1),
-        atmosphereSize: 1.05,
-        orbitDistance: 140
+    planet: {
+        metalness: 0.3,
+        roughness: 0.7
+    },
+    atmosphere: {
+        transparent: true,
+        opacity: 0.3
     }
 };
-// ===== END SECTION: CELESTIAL DATA =====
-// ===== SECTION: IMPLEMENTATION CLASSES =====
-class RingSystem {
-    constructor(planet, config) {
-        this.planet = planet;
-        this.config = config;
-        this.rings = new THREE.Group();
-        this.createRings();
-    }
+// =============== END PART 2 OF 4 ===============
+// =============== START PART 3 OF 4 ===============
+// Helper Functions and Object Creation
 
-    createRings() {
-        if (this.config.useDetailedRings) {
-            this.createDetailedRings();
-        } else {
-            this.createBasicRings();
-        }
-    }
+function createStar(textureFile, data) {
+    const group = new THREE.Group();
+    const textureLoader = new THREE.TextureLoader();
 
-    createDetailedRings() {
-        const { divisions, particleCount, randomness } = ringConfigs.saturn;
+    // Create the star material with enhanced shaders
+    const starMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+            temperature: { value: data.starData.temperature },
+            intensity: { value: data.starData.coronaData.intensity },
+            texture: { value: textureLoader.load(textureFile) }
+        },
+        vertexShader: starVertexShader,
+        fragmentShader: starFragmentShader,
+        transparent: true
+    });
 
-        divisions.forEach(division => {
-            const ringGeometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            const colors = new Float32Array(particleCount * 3);
-            const color = new THREE.Color(division.color);
+    // Create the star mesh
+    const starGeometry = new THREE.SphereGeometry(data.size, 64, 64);
+    const star = new THREE.Mesh(starGeometry, starMaterial);
 
-            for (let i = 0; i < particleCount; i++) {
-                const angle = (Math.random() * Math.PI * 2);
-                const radius = division.innerRadius + 
-                    (Math.random() * (division.outerRadius - division.innerRadius));
-                const randomOffset = (Math.random() - 0.5) * randomness;
+    // Add point light for star illumination
+    const starLight = new THREE.PointLight(0xFFFFFF, 2, 1000);
+    star.add(starLight);
 
-                positions[i * 3] = Math.cos(angle) * radius;
-                positions[i * 3 + 1] = randomOffset;
-                positions[i * 3 + 2] = Math.sin(angle) * radius;
+    // Create corona effect
+    const coronaGeometry = new THREE.SphereGeometry(
+        data.size * data.atmosphereSize,
+        32,
+        32
+    );
+    const coronaMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+            intensity: { value: data.starData.coronaData.intensity }
+        },
+        vertexShader: standardVertexShader,
+        fragmentShader: `
+            uniform float time;
+            uniform float intensity;
+            varying vec3 vNormal;
 
-                colors[i * 3] = color.r * division.density;
-                colors[i * 3 + 1] = color.g * division.density;
-                colors[i * 3 + 2] = color.b * division.density;
+            void main() {
+                float corona = pow(0.5 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+                vec3 color = vec3(1.0, 0.6, 0.1) * corona * intensity;
+                gl_FragColor = vec4(color, corona * 0.5);
             }
+        `,
+        transparent: true,
+        side: THREE.BackSide
+    });
 
-            ringGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            ringGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const corona = new THREE.Mesh(coronaGeometry, coronaMaterial);
+    star.add(corona);
 
-            const ringMaterial = new THREE.PointsMaterial({
-                size: division.particleSize,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.8,
-                depthWrite: false
-            });
+    // Add rotation
+    star.userData.rotationSpeed = (2 * Math.PI) / (data.rotationPeriod * 24);
 
-            const ring = new THREE.Points(ringGeometry, ringMaterial);
-            this.rings.add(ring);
-        });
-    }
-
-    createBasicRings() {
-        const innerRadius = this.planet.geometry.parameters.radius * 1.4;
-        const outerRadius = this.planet.geometry.parameters.radius * 2.0;
-        const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 64);
-        const ringMaterial = new THREE.MeshBasicMaterial({
-            ...materialConfigs.rings.basic,
-            color: this.config.ringColor || 0xA88B5D
-        });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.rotation.x = Math.PI / 2;
-        this.rings.add(ring);
-    }
-
-    update(time) {
-        if (this.config.useDetailedRings) {
-            this.rings.children.forEach(ring => {
-                ring.rotation.y = time * 0.1;
-            });
-        }
-    }
+    group.add(star);
+    return { group, object: star };
 }
 
-class SolarSystem {
-    constructor(scene, celestialData) {
-        this.scene = scene;
-        this.celestialData = celestialData;
-        this.objects = new Map();
-        this.init();
-    }
+function createPlanet(textureFile, data, orbitRadius) {
+    const group = new THREE.Group();
+    const textureLoader = new THREE.TextureLoader();
 
-    init() {
-        // Create sun first
-        this.createSun();
+    // Create planet material
+    const planetMaterial = new THREE.MeshStandardMaterial({
+        map: textureLoader.load(textureFile),
+        ...materialConfigs.planet
+    });
 
-        // Create planets
-        Object.entries(this.celestialData)
-            .filter(([_, data]) => !data.isStar)
-            .forEach(([texture, data]) => {
-                this.createPlanet(texture, data);
-            });
-    }
+    // Create planet mesh
+    const planetGeometry = new THREE.SphereGeometry(data.size, 32, 32);
+    const planet = new THREE.Mesh(planetGeometry, planetMaterial);
 
-    createSun() {
-        const sunData = this.celestialData['2k_sun.jpg'];
-        const textureLoader = new THREE.TextureLoader();
+    // Apply axial tilt
+    planet.rotation.x = data.axialTilt * Math.PI / 180;
 
-        // Sun mesh
-        const sunGeometry = new THREE.SphereGeometry(sunData.size, 64, 64);
-        const sunMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 },
-                temperature: { value: sunData.starData.temperature },
-                intensity: { value: sunData.starData.luminosity },
-                texture: { value: textureLoader.load('2k_sun.jpg') }
-            },
-            vertexShader: starVertexShader,
-            fragmentShader: starFragmentShader
-        });
+    // Add rotation speed to userData
+    planet.userData.rotationSpeed = (2 * Math.PI) / (data.rotationPeriod * 24);
 
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        this.scene.add(sun);
-        this.objects.set('sun', sun);
-
-        // Corona
-        const coronaGeometry = new THREE.SphereGeometry(
-            sunData.size * sunData.starData.coronaData.coronaSize, 
-            32, 
-            32
-        );
-        const coronaMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 },
-                intensity: { value: sunData.starData.coronaData.intensity }
-            },
-            vertexShader: coronaVertexShader,
-            fragmentShader: coronaFragmentShader,
-            transparent: true,
-            side: THREE.BackSide,
-            blending: THREE.AdditiveBlending
-        });
-
-        const corona = new THREE.Mesh(coronaGeometry, coronaMaterial);
-        this.scene.add(corona);
-        this.objects.set('corona', corona);
-    }
-
-    createPlanet(textureName, data) {
-        const textureLoader = new THREE.TextureLoader();
-        const planetGeometry = new THREE.SphereGeometry(data.size, 32, 32);
-        const planetMaterial = new THREE.MeshStandardMaterial({
-            map: textureLoader.load(textureName),
-            ...materialConfigs.planet
-        });
-
-        const planet = new THREE.Mesh(planetGeometry, planetMaterial);
-
-        // Create orbit
-        const orbitGeometry = new THREE.BufferGeometry();
-        const orbitPoints = [];
-        const segments = 128;
-
-        for (let i = 0; i <= segments; i++) {
-            const theta = (i / segments) * Math.PI * 2;
-            orbitPoints.push(
-                Math.cos(theta) * data.orbitDistance,
-                0,
-                Math.sin(theta) * data.orbitDistance
-            );
-        }
-
-        orbitGeometry.setAttribute('position', new THREE.Float32BufferAttribute(orbitPoints, 3));
-        const orbitMaterial = new THREE.LineBasicMaterial({ color: 0x444444, transparent: true, opacity: 0.2 });
-        const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
-
-        this.scene.add(orbit);
-        this.scene.add(planet);
-        this.objects.set(textureName, { planet, orbit, data });
-
-        // Add atmosphere if needed
-        if (data.hasAtmosphere) {
-            this.createAtmosphere(planet, data);
-        }
-
-        // Add rings if needed
-        if (data.hasRings) {
-            const ringSystem = new RingSystem(planet, data);
-            planet.add(ringSystem.rings);
-            this.objects.get(textureName).ringSystem = ringSystem;
-        }
-    }
-
-    createAtmosphere(planet, data) {
+    // Create atmosphere if planet has one
+    if (data.hasAtmosphere) {
         const atmosphereGeometry = new THREE.SphereGeometry(
-            planet.geometry.parameters.radius * data.atmosphereSize,
+            data.size * data.atmosphereSize,
             32,
             32
         );
-        const atmosphereMaterial = new THREE.MeshBasicMaterial({
+        const atmosphereMaterial = new THREE.MeshPhongMaterial({
             color: data.atmosphereColor,
             ...materialConfigs.atmosphere
         });
@@ -582,65 +367,174 @@ class SolarSystem {
         planet.add(atmosphere);
     }
 
-    update(time) {
-        // Update sun shaders
-        const sunMaterial = this.objects.get('sun').material;
-        const coronaMaterial = this.objects.get('corona').material;
-        sunMaterial.uniforms.time.value = time;
-        coronaMaterial.uniforms.time.value = time;
+    // Create rings if planet has them
+    if (data.hasRings) {
+        const ringGeometry = new THREE.RingGeometry(
+            data.size * 1.4,
+            data.size * 2.0,
+            64
+        );
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            color: data.ringColor,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.6
+        });
+        const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+        rings.rotation.x = Math.PI / 2;
+        planet.add(rings);
+    }
 
-        // Update planets
-        this.objects.forEach((obj, key) => {
-            if (key !== 'sun' && key !== 'corona') {
-                const { planet, data } = obj;
-                const orbitSpeed = 1 / Math.sqrt(data.orbitDistance) * 0.5;
-                const angle = time * orbitSpeed;
-
-                planet.position.x = Math.cos(angle) * data.orbitDistance;
-                planet.position.z = Math.sin(angle) * data.orbitDistance;
-                planet.rotation.y += 0.01 / data.rotationPeriod;
-
-                if (obj.ringSystem) {
-                    obj.ringSystem.update(time);
-                }
-            }
+    // Create moons if planet has them
+    if (data.hasMoon && data.moons) {
+        data.moons.forEach(moonData => {
+            const moonGroup = createMoon(moonData, data.size);
+            planet.add(moonGroup.group);
         });
     }
+
+    group.add(planet);
+
+    // Position in orbit
+    group.position.x = orbitRadius;
+
+    return { group, object: planet };
 }
 
-// ===== END SECTION: IMPLEMENTATION CLASSES =====
-// ===== SECTION: MAIN INITIALIZATION AND ANIMATION =====
-const solarSystem = new SolarSystem(scene, celestialData);
+function createMoon(moonData, planetSize) {
+    const group = new THREE.Group();
+    const textureLoader = new THREE.TextureLoader();
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0x333333);
-scene.add(ambientLight);
+    const moonMaterial = new THREE.MeshStandardMaterial({
+        map: textureLoader.load(moonData.texture),
+        ...materialConfigs.planet
+    });
 
-const sunLight = new THREE.PointLight(0xFFFFFF, 2, 1000);
-sunLight.position.set(0, 0, 0);
-scene.add(sunLight);
+    const moonGeometry = new THREE.SphereGeometry(moonData.size, 32, 32);
+    const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+
+    // Position moon relative to planet
+    moon.position.x = planetSize * moonData.distance;
+
+    // Add rotation speed to userData
+    moon.userData.rotationSpeed = (2 * Math.PI) / (moonData.rotationPeriod * 24);
+
+    group.add(moon);
+    return { group, object: moon };
+}
+// =============== END PART 3 OF 4 ===============
+// =============== START PART 4 OF 4 ===============
+// Scene Initialization and Animation
+
+// Create orbit lines
+function createOrbitLine(radius) {
+    const segments = 128;
+    const orbitGeometry = new THREE.BufferGeometry();
+    const points = [];
+
+    for (let i = 0; i <= segments; i++) {
+        const theta = (i / segments) * Math.PI * 2;
+        points.push(
+            Math.cos(theta) * radius,
+            0,
+            Math.sin(theta) * radius
+        );
+    }
+
+    orbitGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+
+    const orbitMaterial = new THREE.LineBasicMaterial({
+        color: 0x444444,
+        transparent: true,
+        opacity: 0.3
+    });
+
+    return new THREE.Line(orbitGeometry, orbitMaterial);
+}
+
+// Initialize celestial bodies
+const celestialBodies = {};
+let time = 0;
+
+// Create all celestial bodies
+function initializeSolarSystem() {
+    // Create the sun first
+    const sunData = createStar('2k_sun.jpg', celestialData['2k_sun.jpg']);
+    celestialBodies.sun = sunData;
+    scene.add(sunData.group);
+
+    // Create planets
+    Object.entries(celestialData).forEach(([texture, data]) => {
+        if (!data.isStar) {
+            // Create orbit line
+            const orbitLine = createOrbitLine(data.orbitDistance);
+            scene.add(orbitLine);
+
+            // Create planet
+            const planetData = createPlanet(texture, data, data.orbitDistance);
+            celestialBodies[texture] = planetData;
+            scene.add(planetData.group);
+        }
+    });
+
+    // Add ambient light for better visibility
+    const ambientLight = new THREE.AmbientLight(0x333333);
+    scene.add(ambientLight);
+}
 
 // Animation loop
-let time = 0;
 function animate() {
     requestAnimationFrame(animate);
-
     time += 0.001;
-    solarSystem.update(time);
+
+    // Update all celestial bodies
+    Object.entries(celestialBodies).forEach(([key, data]) => {
+        const bodyData = celestialData[key];
+
+        // Rotate body
+        if (data.object) {
+            data.object.rotation.y += data.object.userData.rotationSpeed;
+        }
+
+        // Orbit planets around sun
+        if (!bodyData.isStar) {
+            data.group.position.x = Math.cos(time * 0.5) * bodyData.orbitDistance;
+            data.group.position.z = Math.sin(time * 0.5) * bodyData.orbitDistance;
+        }
+
+        // Update star shader uniforms
+        if (bodyData.isStar) {
+            const material = data.object.material;
+            if (material.uniforms) {
+                material.uniforms.time.value = time;
+            }
+
+            // Update corona if it exists
+            const corona = data.object.children.find(child => child.material.uniforms);
+            if (corona) {
+                corona.material.uniforms.time.value = time;
+            }
+        }
+    });
+
+    // Update controls
     controls.update();
 
+    // Render scene
     renderer.render(scene, camera);
 }
 
-// Event handlers
-window.addEventListener('resize', () => {
+// Handle window resize
+function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-});
+}
 
-// Initialize animation
+// Event listeners
+window.addEventListener('resize', onWindowResize, false);
+
+// Initialize and start animation
+initializeSolarSystem();
 animate();
-
-// Optional: Export for external access
-export { scene, camera, renderer, solarSystem };
+// =============== END PART 4 OF 4 ===============
