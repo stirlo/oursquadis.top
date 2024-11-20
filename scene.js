@@ -1,6 +1,7 @@
-import * as THREE from '.https://oursquadis.top/three.module.js';
-import { OrbitControls } from 'https://oursquadis.top/OrbitControls.js';
-import { gsap } from 'https://oursquadis.top/gsap.min.js';
+// Instead of local file
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
 
 
 // Scene setup
