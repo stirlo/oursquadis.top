@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' unpkg.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' unpkg.com; style-src 'self' 'unsafe-inline';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' unpkg.com cdnjs.cloudflare.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' unpkg.com cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline';">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -25,20 +25,79 @@
         canvas { 
             display: block; 
         }
+        #debug { 
+            position: fixed; 
+            top: 10px; 
+            left: 10px; 
+            color: white; 
+            z-index: 100;
+            font-family: monospace;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
-    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js" 
-            integrity="sha384-6S9So0JMrZen1ZgWqF9qDPyF2vzXVzHnXU9Phy7k9YqPVQxnL5q3iJj17VbhRxHM" 
-            crossorigin="anonymous"></script>
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.159.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.159.0/examples/jsm/"
+    <div id="debug">Loading...</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
+    <script>
+        // Debug helper
+        const debug = document.getElementById('debug');
+        function log(msg) {
+            debug.innerHTML += '<br>' + msg;
+            console.log(msg);
         }
-    }
+
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            log('Error: ' + msg);
+            log('Line: ' + lineNo);
+            return false;
+        };
+
+        log('Script started');
+
+        // Basic Three.js setup
+        try {
+            log('Checking WebGL...');
+            if (!window.WebGLRenderingContext) {
+                throw new Error('WebGL not supported');
+            }
+
+            const scene = new THREE.Scene();
+            log('Scene created');
+
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+            log('Camera created');
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            log('Renderer created');
+
+            // Add a simple cube to test
+            const geometry = new THREE.BoxGeometry();
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+            log('Cube added');
+
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+
+            log('Starting animation...');
+            animate();
+            log('Animation started');
+
+        } catch (error) {
+            log('Critical Error: ' + error.message);
+            log('Stack: ' + error.stack);
+        }
     </script>
-    <script type="module" src="main.js"></script>
 </body>
 </html>
