@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' unpkg.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' unpkg.com; style-src 'self' 'unsafe-inline';">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -9,21 +10,27 @@
     <meta name="msapplication-TileColor" content="#603cba">
     <meta name="theme-color" content="#ffffff">
     <title>Our Squad is Top.. Click to Continue...</title>
-    <!-- Open Graph meta tags -->
     <meta property="og:title" content="Our Squad is Top.." />
     <meta property="og:description" content="Click to continue your jouney..." />
     <meta property="og:url" content="https://oursquadis.top" />
     <meta property="og:image" content="https://oursquadis.top/android-chrome-512x512.png" />
-    <!-- Recommended to specify image dimensions -->
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <style>
-        body { margin: 0; }
-        canvas { display: block; }
+        body { 
+            margin: 0; 
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas { 
+            display: block; 
+        }
     </style>
 </head>
 <body>
-    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js" 
+            integrity="sha384-6S9So0JMrZen1ZgWqF9qDPyF2vzXVzHnXU9Phy7k9YqPVQxnL5q3iJj17VbhRxHM" 
+            crossorigin="anonymous"></script>
     <script type="importmap">
     {
         "imports": {
