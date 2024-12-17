@@ -25,117 +25,31 @@
         canvas { 
             display: block; 
         }
-        #debug { 
-            position: fixed; 
-            top: 10px; 
-            left: 10px; 
-            color: white; 
-            z-index: 100;
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
             font-family: monospace;
+            font-size: 1.2em;
+            text-align: center;
             background: rgba(0,0,0,0.7);
-            padding: 10px;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
-    <div id="debug">Loading...</div>
+    <div id="loading">Loading Halley's Journey...</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
-    <script>
-        const debug = document.getElementById('debug');
-        function log(msg) {
-            debug.innerHTML += '<br>' + msg;
-            console.log(msg);
-        }
-
-        try {
-            // Constants
-            const SOLAR_SYSTEM_SCALE = 50; // Reduced scale
-            const SUN_SIZE = 10; // Reduced size
-
-            // Scene setup
-            const scene = new THREE.Scene();
-            log('Scene created');
-
-            // Camera setup with adjusted position
-            const camera = new THREE.PerspectiveCamera(
-                60, // Wider FOV
-                window.innerWidth / window.innerHeight,
-                0.1,
-                1000
-            );
-            // Position camera to look at scene from above
-            camera.position.set(0, 50, 50);
-            camera.lookAt(0, 0, 0);
-            log('Camera created');
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.body.appendChild(renderer.domElement);
-            log('Renderer created');
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0x444444);
-            scene.add(ambientLight);
-
-            const pointLight = new THREE.PointLight(0xffffff, 2);
-            pointLight.position.set(0, 20, 20);
-            scene.add(pointLight);
-            log('Lights added');
-
-            // Create sun
-            const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 32, 32);
-            const sunMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xffff00,
-                transparent: true,
-                opacity: 0.9
-            });
-            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-            scene.add(sun);
-            log('Sun created');
-
-            // Create a simple planet
-            const earthGeometry = new THREE.SphereGeometry(SUN_SIZE * 0.3, 32, 32);
-            const earthMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x2233ff,
-                shininess: 25
-            });
-            const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-            earth.position.x = SOLAR_SYSTEM_SCALE * 0.5;
-            scene.add(earth);
-            log('Earth created');
-
-            // Animation
-            function animate() {
-                requestAnimationFrame(animate);
-
-                // Rotate sun
-                sun.rotation.y += 0.001;
-
-                // Orbit earth
-                const time = Date.now() * 0.001;
-                earth.position.x = Math.cos(time * 0.5) * SOLAR_SYSTEM_SCALE * 0.5;
-                earth.position.z = Math.sin(time * 0.5) * SOLAR_SYSTEM_SCALE * 0.5;
-                earth.rotation.y += 0.02;
-
-                renderer.render(scene, camera);
-            }
-
-            log('Starting animation...');
-            animate();
-
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                renderer.setPixelRatio(window.devicePixelRatio);
-            });
-
-        } catch (error) {
-            log('Critical Error: ' + error.message);
-            log('Stack: ' + error.stack);
-        }
-    </script>
+    <script src="https://unpkg.com/three@0.159.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/three@0.159.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.159.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.159.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.159.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.159.0/examples/js/shaders/OutlineShader.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
