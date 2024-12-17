@@ -57,7 +57,7 @@
     <div id="controls">Press SPACE to toggle camera view</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
     <script>
-        // Scene setup with larger bounds for comet path
+        // Scene setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -69,38 +69,72 @@
         const SOLAR_SYSTEM_SCALE = 500;
         const SUN_SIZE = 50;
         const ORBIT_DURATION = 80; // seconds for comet orbit
-
-        // Texture loader
-        const textureLoader = new THREE.TextureLoader();
-        const textures = {};
-        let loadedTextures = 0;
-        const totalTextures = 9;
+        const ANIMATION_SPEEDS = {
+            SUN_ROTATION: 0.001,
+            BASE_PLANET_ROTATION: 0.02,
+            BASE_MOON_ROTATION: 0.01,
+            BASE_ORBIT_SPEED: 0.001
+        };
 
         // Planet data with moons
         const planetData = {
-            mercury: { size: 0.038, distance: 0.4, moons: 0 },
-            venus: { size: 0.095, distance: 0.7, moons: 0 },
-            earth: { size: 0.1, distance: 1, moons: 1 },
-            mars: { size: 0.053, distance: 1.5, moons: 2 },
-            jupiter: { size: 1.12, distance: 5.2, moons: 4 },
-            saturn: { size: 0.945, distance: 9.5, moons: 3 },
-            uranus: { size: 0.4, distance: 19.2, moons: 2 },
-            neptune: { size: 0.388, distance: 30.1, moons: 1 }
+            mercury: { size: 0.038, distance: 0.4, moons: 0, rotationSpeed: 0.01 },
+            venus: { size: 0.095, distance: 0.7, moons: 0, rotationSpeed: 0.008 },
+            earth: { size: 0.1, distance: 1, moons: 1, rotationSpeed: 0.006 },
+            mars: { size: 0.053, distance: 1.5, moons: 2, rotationSpeed: 0.005 },
+            jupiter: { size: 1.12, distance: 5.2, moons: 4, rotationSpeed: 0.004 },
+            saturn: { size: 0.945, distance: 9.5, moons: 3, rotationSpeed: 0.003 },
+            uranus: { size: 0.4, distance: 19.2, moons: 2, rotationSpeed: 0.002 },
+            neptune: { size: 0.388, distance: 30.1, moons: 1, rotationSpeed: 0.001 }
         };
 
-        // Load textures
-        function loadTexture(name) {
-            return new Promise((resolve) => {
-                textureLoader.load(`2k_${name}.jpg`, 
-                    (texture) => {
-                        textures[name] = texture;
-                        resolve();
-                    }
-                );
-            });
-        }
+        // Create sun
+        const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 64, 64);
+        const sunMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffff00,
+            emissive: 0xffff00,
+            emissiveIntensity: 0.5
+        });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
 
-        // Create moon
+        // Add lights
+        const sunLight = new THREE.PointLight(0xffffff, 2, SOLAR_SYSTEM_SCALE * 4);
+        sun.add(sunLight);
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+
+        // Create planets
+        const planets = {};
+        Object.entries(planetData).forEach(([name, data]) => {
+            const planetGeometry = new THREE.SphereGeometry(SUN_SIZE * data.size, 32, 32);
+            const planetMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                shininess: 25
+            });
+            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+
+            // Create planet group for rotation
+            const planetGroup = new THREE.Group();
+            planetGroup.add(planet);
+
+            // Position planet
+            planetGroup.position.x = SOLAR_SYSTEM_SCALE * data.distance;
+
+            // Add moons if any
+            for(let i = 0; i < data.moons; i++) {
+                const moonGroup = new THREE.Group();
+                const moon = createMoon(SUN_SIZE * data.size, SUN_SIZE * data.size * 2);
+                moonGroup.add(moon);
+                moonGroup.rotation.y = (Math.PI * 2 / data.moons) * i;
+                planetGroup.add(moonGroup);
+            }
+
+            planets[name] = planetGroup;
+            scene.add(planetGroup);
+        });
+
+        // Create moon helper function
         function createMoon(planetSize, distance) {
             const moonGeometry = new THREE.SphereGeometry(planetSize * 0.2, 32, 32);
             const moonMaterial = new THREE.MeshPhongMaterial({
@@ -112,159 +146,49 @@
             return moon;
         }
 
-        // Create planet with moons
-        function createPlanet(name, data) {
-            const planetGroup = new THREE.Group();
+        // Set camera position
+        camera.position.set(SOLAR_SYSTEM_SCALE * 1.5, SOLAR_SYSTEM_SCALE * 0.5, SOLAR_SYSTEM_SCALE * 1.5);
+        camera.lookAt(0, 0, 0);
 
-            // Create planet
-            const planetGeometry = new THREE.SphereGeometry(SUN_SIZE * data.size, 32, 32);
-            const planetMaterial = new THREE.MeshPhongMaterial({
-                map: textures[name],
-                shininess: 25
-            });
-            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
-            planetGroup.add(planet);
+        // Animation
+        const clock = new THREE.Clock();
 
-            // Add moons
-            for(let i = 0; i < data.moons; i++) {
-                const moonOrbit = new THREE.Group();
-                const moon = createMoon(SUN_SIZE * data.size, SUN_SIZE * data.size * 2);
-                moonOrbit.rotation.y = (Math.PI * 2 / data.moons) * i;
-                moonOrbit.add(moon);
-                planetGroup.add(moonOrbit);
-            }
+        function animate() {
+            requestAnimationFrame(animate);
 
-            planetGroup.position.x = SOLAR_SYSTEM_SCALE * data.distance;
-            return planetGroup;
-        }
+            const elapsedTime = clock.getElapsedTime();
 
-        // Create Halley's Comet
-        function createComet() {
-            const cometGroup = new THREE.Group();
+            // Rotate sun
+            sun.rotation.y += ANIMATION_SPEEDS.SUN_ROTATION;
 
-            // Comet head
-            const cometGeometry = new THREE.SphereGeometry(SUN_SIZE * 0.02, 32, 32);
-            const cometMaterial = new THREE.MeshPhongMaterial({
-                color: 0xffffff,
-                emissive: 0x444444
-            });
-            const comet = new THREE.Mesh(cometGeometry, cometMaterial);
+            // Update planets and moons
+            Object.entries(planets).forEach(([name, planetGroup]) => {
+                const data = planetData[name];
 
-            // Comet tail
-            const tailGeometry = new THREE.ConeGeometry(SUN_SIZE * 0.015, SUN_SIZE * 0.2, 32);
-            const tailMaterial = new THREE.MeshPhongMaterial({
-                color: 0x88aaff,
-                transparent: true,
-                opacity: 0.6
-            });
-            const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-            tail.position.y = -SUN_SIZE * 0.1;
-            tail.rotation.x = Math.PI;
+                // Planet orbit
+                const orbitSpeed = ANIMATION_SPEEDS.BASE_ORBIT_SPEED / Math.sqrt(data.distance);
+                const angle = elapsedTime * orbitSpeed;
+                planetGroup.position.x = Math.cos(angle) * (SOLAR_SYSTEM_SCALE * data.distance);
+                planetGroup.position.z = Math.sin(angle) * (SOLAR_SYSTEM_SCALE * data.distance);
 
-            cometGroup.add(comet);
-            cometGroup.add(tail);
-            return cometGroup;
-        }
+                // Planet rotation
+                const planet = planetGroup.children[0];
+                planet.rotation.y += data.rotationSpeed;
 
-        // Initialize scene
-        async function initScene() {
-            // Load all textures
-            await Promise.all([
-                loadTexture('sun'),
-                loadTexture('mercury'),
-                loadTexture('venus_surface'),
-                loadTexture('earth_daymap'),
-                loadTexture('mars'),
-                loadTexture('jupiter'),
-                loadTexture('saturn'),
-                loadTexture('uranus'),
-                loadTexture('neptune')
-            ]);
-
-            // Create sun
-            const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 64, 64);
-            const sunMaterial = new THREE.MeshBasicMaterial({
-                map: textures.sun,
-                emissive: 0xffff00,
-                emissiveIntensity: 0.5
-            });
-            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-            scene.add(sun);
-
-            // Add lights
-            const sunLight = new THREE.PointLight(0xffffff, 2, SOLAR_SYSTEM_SCALE * 4);
-            sun.add(sunLight);
-            const ambientLight = new THREE.AmbientLight(0x404040);
-            scene.add(ambientLight);
-
-            // Create planets
-            const planets = {};
-            Object.entries(planetData).forEach(([name, data]) => {
-                planets[name] = createPlanet(name, data);
-                scene.add(planets[name]);
-            });
-
-            // Create comet
-            const comet = createComet();
-            scene.add(comet);
-
-            // Add camera to comet for perspective
-            const cometCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-            comet.add(cometCamera);
-            cometCamera.position.z = SUN_SIZE * 0.2;
-            cometCamera.lookAt(sun.position);
-
-            // Set initial camera position
-            camera.position.set(SOLAR_SYSTEM_SCALE * 1.5, SOLAR_SYSTEM_SCALE * 0.5, SOLAR_SYSTEM_SCALE * 1.5);
-            camera.lookAt(0, 0, 0);
-
-            let useMainCamera = true;
-
-            // Toggle camera with spacebar
-            document.addEventListener('keydown', (event) => {
-                if (event.code === 'Space') {
-                    useMainCamera = !useMainCamera;
-                }
-            });
-
-            // Animation
-            const clock = new THREE.Clock();
-            function animate() {
-                requestAnimationFrame(animate);
-
-                const elapsedTime = clock.getElapsedTime();
-                const orbitProgress = (elapsedTime % ORBIT_DURATION) / ORBIT_DURATION;
-
-                // Update comet position
-                const angle = orbitProgress * Math.PI * 2;
-                const distance = SOLAR_SYSTEM_SCALE * 35;
-                comet.position.x = Math.cos(angle) * distance;
-                comet.position.z = Math.sin(angle) * distance * 0.5;
-                comet.position.y = Math.sin(angle) * distance * Math.sin(162.3 * Math.PI / 180);
-
-                // Update comet rotation to face movement direction
-                comet.lookAt(sun.position);
-
-                // Update planets and moons
-                Object.values(planets).forEach((planetGroup, index) => {
-                    const speed = 0.001 / Math.sqrt(planetData[Object.keys(planetData)[index]].distance);
-                    planetGroup.rotation.y += speed;
-                    planetGroup.children.forEach(moon => {
-                        if(moon instanceof THREE.Group) {
-                            moon.rotation.y += speed * 2;
-                        }
-                    });
+                // Moon rotations
+                planetGroup.children.slice(1).forEach(moonGroup => {
+                    moonGroup.rotation.y += ANIMATION_SPEEDS.BASE_MOON_ROTATION;
+                    const moon = moonGroup.children[0];
+                    if(moon) {
+                        moon.rotation.y += ANIMATION_SPEEDS.BASE_MOON_ROTATION * 0.5;
+                    }
                 });
+            });
 
-                // Render with appropriate camera
-                renderer.render(scene, useMainCamera ? camera : cometCamera);
-            }
-
-            animate();
-            document.getElementById('loading').style.display = 'none';
+            renderer.render(scene, camera);
         }
 
-        initScene();
+        animate();
 
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -273,6 +197,9 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
         });
+
+        // Hide loading screen after everything is set up
+        document.getElementById('loading').style.display = 'none';
     </script>
 </body>
 </html>
