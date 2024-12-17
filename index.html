@@ -47,49 +47,61 @@
             console.log(msg);
         }
 
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            log('Error: ' + msg);
-            log('Line: ' + lineNo);
-            return false;
-        };
-
-        log('Script started');
-
         try {
             // Constants
-            const SOLAR_SYSTEM_SCALE = 100;
-            const SUN_SIZE = 15;
+            const SOLAR_SYSTEM_SCALE = 50; // Reduced scale
+            const SUN_SIZE = 10; // Reduced size
 
             // Scene setup
             const scene = new THREE.Scene();
             log('Scene created');
 
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, SOLAR_SYSTEM_SCALE * 100);
-            camera.position.set(0, SOLAR_SYSTEM_SCALE * 0.3, SOLAR_SYSTEM_SCALE * 0.3);
+            // Camera setup with adjusted position
+            const camera = new THREE.PerspectiveCamera(
+                60, // Wider FOV
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            // Position camera to look at scene from above
+            camera.position.set(0, 50, 50);
+            camera.lookAt(0, 0, 0);
             log('Camera created');
 
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
             log('Renderer created');
 
             // Lighting
             const ambientLight = new THREE.AmbientLight(0x444444);
             scene.add(ambientLight);
-            log('Ambient light added');
+
+            const pointLight = new THREE.PointLight(0xffffff, 2);
+            pointLight.position.set(0, 20, 20);
+            scene.add(pointLight);
+            log('Lights added');
 
             // Create sun
             const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 32, 32);
-            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const sunMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffff00,
+                transparent: true,
+                opacity: 0.9
+            });
             const sun = new THREE.Mesh(sunGeometry, sunMaterial);
             scene.add(sun);
             log('Sun created');
 
             // Create a simple planet
             const earthGeometry = new THREE.SphereGeometry(SUN_SIZE * 0.3, 32, 32);
-            const earthMaterial = new THREE.MeshPhongMaterial({ color: 0x2233ff });
+            const earthMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x2233ff,
+                shininess: 25
+            });
             const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-            earth.position.x = SOLAR_SYSTEM_SCALE * 0.3;
+            earth.position.x = SOLAR_SYSTEM_SCALE * 0.5;
             scene.add(earth);
             log('Earth created');
 
@@ -102,8 +114,8 @@
 
                 // Orbit earth
                 const time = Date.now() * 0.001;
-                earth.position.x = Math.cos(time * 0.5) * SOLAR_SYSTEM_SCALE * 0.3;
-                earth.position.z = Math.sin(time * 0.5) * SOLAR_SYSTEM_SCALE * 0.3;
+                earth.position.x = Math.cos(time * 0.5) * SOLAR_SYSTEM_SCALE * 0.5;
+                earth.position.z = Math.sin(time * 0.5) * SOLAR_SYSTEM_SCALE * 0.5;
                 earth.rotation.y += 0.02;
 
                 renderer.render(scene, camera);
@@ -111,13 +123,13 @@
 
             log('Starting animation...');
             animate();
-            log('Animation started');
 
             // Handle window resize
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
             });
 
         } catch (error) {
