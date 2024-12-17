@@ -7,13 +7,17 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 let scene, camera, renderer, controls, composer;
 let sun, comet;
 const planets = {};
-const ORBIT_DURATION = 80; // seconds
 
-// Cel shader
+// Constants
+const SOLAR_SYSTEM_SCALE = 1000;
+const SUN_SIZE = 50;
+const ORBIT_DURATION = 80; // seconds for Halley's orbit
+
+// Enhanced Cel shader for cartoon effect
 const CelShader = {
     uniforms: {
         tDiffuse: { value: null },
-        levels: { value: 4.0 },
+        levels: { value: 3.0 }, // Reduced levels for more distinct bands
     },
     vertexShader: `
         varying vec2 vUv;
@@ -40,12 +44,20 @@ const CelShader = {
             vec3 normal = normalize(vNormal);
             vec3 viewDir = normalize(vViewPosition);
 
+            // Enhanced cel shading
             float diffuse = dot(normal, vec3(0.0, 0.0, 1.0));
             diffuse = max(0.0, diffuse);
 
+            // Create sharper bands
             float cel = floor(diffuse * levels) / levels;
 
-            vec3 celColor = texel.rgb * (cel + 0.3);
+            // Add edge detection
+            float edge = (1.0 - dot(normal, viewDir)) * 0.5;
+            edge = edge > 0.7 ? 0.0 : 1.0;
+
+            // Enhance color contrast
+            vec3 celColor = texel.rgb * (cel + 0.2) * edge;
+            celColor = floor(celColor * levels) / levels;
 
             gl_FragColor = vec4(celColor, texel.a);
         }
@@ -57,8 +69,8 @@ function init() {
     scene = new THREE.Scene();
 
     // Camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
-    camera.position.set(0, 200, 200);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, SOLAR_SYSTEM_SCALE * 100);
+    camera.position.set(0, SOLAR_SYSTEM_SCALE * 2, SOLAR_SYSTEM_SCALE * 2);
 
     // Renderer
     renderer = new THREE.WebGLRenderer({ 
@@ -73,12 +85,6 @@ function init() {
     const textureLoader = new THREE.TextureLoader();
     scene.background = textureLoader.load('milkyway.jpg');
 
-    // Lighting
-    const sunLight = new THREE.PointLight(0xffffff, 2, 0);
-    scene.add(sunLight);
-    const ambientLight = new THREE.AmbientLight(0x333333);
-    scene.add(ambientLight);
-
     // Post-processing
     setupPostProcessing();
 
@@ -91,9 +97,21 @@ function init() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.maxDistance = SOLAR_SYSTEM_SCALE * 50;
 
     // Mobile optimization
     setupMobileOptimization();
+}
+
+function createToonGradient() {
+    const gradientTexture = new THREE.DataTexture(
+        new Uint8Array([0, 128, 196, 255]), // Four steps for stronger cartoon effect
+        4,
+        1,
+        THREE.LuminanceFormat
+    );
+    gradientTexture.needsUpdate = true;
+    return gradientTexture;
 }
 
 function setupPostProcessing() {
@@ -102,31 +120,41 @@ function setupPostProcessing() {
     composer.addPass(renderPass);
 
     const celPass = new ShaderPass(CelShader);
-    celPass.uniforms.levels.value = 5.0;
+    celPass.uniforms.levels.value = 3.0;
     composer.addPass(celPass);
 }
 
 function createSun() {
-    const geometry = new THREE.SphereGeometry(50, 32, 32);
-    const material = new THREE.MeshBasicMaterial({
+    const geometry = new THREE.SphereGeometry(SUN_SIZE, 32, 32);
+    const material = new THREE.MeshToonMaterial({
         map: new THREE.TextureLoader().load('2k_sun.jpg'),
         emissive: 0xffff00,
-        emissiveIntensity: 0.5
+        emissiveIntensity: 1.0,
+        gradientMap: createToonGradient()
     });
     sun = new THREE.Mesh(geometry, material);
+    sun.position.set(0, 0, 0);
     scene.add(sun);
+
+    // Enhanced sun lighting
+    const sunLight = new THREE.PointLight(0xffffff, 3, SOLAR_SYSTEM_SCALE * 3);
+    sunLight.position.set(0, 0, 0);
+    scene.add(sunLight);
+
+    const ambientLight = new THREE.AmbientLight(0x444444);
+    scene.add(ambientLight);
 }
 
 function createPlanets() {
     const planetData = [
-        { name: 'mercury', size: 3.8, texture: '2k_mercury.jpg', orbit: 80 },
-        { name: 'venus', size: 9.5, texture: '2k_venus_surface.jpg', orbit: 150 },
-        { name: 'earth', size: 10, texture: '2k_earth_daymap.jpg', orbit: 200 },
-        { name: 'mars', size: 5.3, texture: '2k_mars.jpg', orbit: 300 },
-        { name: 'jupiter', size: 112, texture: '2k_jupiter.jpg', orbit: 500 },
-        { name: 'saturn', size: 94.5, texture: '2k_saturn.jpg', orbit: 900 },
-        { name: 'uranus', size: 40, texture: '2k_uranus.jpg', orbit: 1800 },
-        { name: 'neptune', size: 38.8, texture: '2k_neptune.jpg', orbit: 2800 }
+        { name: 'mercury', size: SUN_SIZE * 0.038, texture: '2k_mercury.jpg', orbit: SOLAR_SYSTEM_SCALE * 0.387 },
+        { name: 'venus', size: SUN_SIZE * 0.095, texture: '2k_venus_surface.jpg', orbit: SOLAR_SYSTEM_SCALE * 0.723 },
+        { name: 'earth', size: SUN_SIZE * 0.1, texture: '2k_earth_daymap.jpg', orbit: SOLAR_SYSTEM_SCALE * 1.0 },
+        { name: 'mars', size: SUN_SIZE * 0.053, texture: '2k_mars.jpg', orbit: SOLAR_SYSTEM_SCALE * 1.524 },
+        { name: 'jupiter', size: SUN_SIZE * 1.12, texture: '2k_jupiter.jpg', orbit: SOLAR_SYSTEM_SCALE * 5.203 },
+        { name: 'saturn', size: SUN_SIZE * 0.945, texture: '2k_saturn.jpg', orbit: SOLAR_SYSTEM_SCALE * 9.537 },
+        { name: 'uranus', size: SUN_SIZE * 0.4, texture: '2k_uranus.jpg', orbit: SOLAR_SYSTEM_SCALE * 19.191 },
+        { name: 'neptune', size: SUN_SIZE * 0.388, texture: '2k_neptune.jpg', orbit: SOLAR_SYSTEM_SCALE * 30.069 }
     ];
 
     planetData.forEach(data => {
@@ -145,7 +173,7 @@ function createPlanets() {
 }
 
 function createHalleysComet() {
-    const geometry = new THREE.SphereGeometry(2, 16, 16);
+    const geometry = new THREE.SphereGeometry(SUN_SIZE * 0.01, 16, 16);
     const material = new THREE.MeshToonMaterial({ 
         color: 0xcccccc,
         emissive: 0x444444,
@@ -154,46 +182,51 @@ function createHalleysComet() {
     comet = new THREE.Mesh(geometry, material);
     scene.add(comet);
 
-    // Add comet tail
-    const tailGeometry = new THREE.ConeGeometry(1, 20, 8);
+    // Enhanced comet tail
+    const tailGeometry = new THREE.ConeGeometry(SUN_SIZE * 0.005, SUN_SIZE * 0.4, 8);
     const tailMaterial = new THREE.MeshToonMaterial({
         color: 0x88aaff,
         transparent: true,
-        opacity: 0.6
+        opacity: 0.6,
+        gradientMap: createToonGradient()
     });
     const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-    tail.position.z = -10;
+    tail.position.z = -SUN_SIZE * 0.2;
     tail.rotation.x = Math.PI / 2;
     comet.add(tail);
-}
-
-function createToonGradient() {
-    const gradientMap = new THREE.DataTexture(
-        new Uint8Array([0, 128, 256]),
-        3,
-        1,
-        THREE.LuminanceFormat
-    );
-    gradientMap.needsUpdate = true;
-    return gradientMap;
 }
 
 function updateCometPosition(time) {
     const orbitProgress = (time % ORBIT_DURATION) / ORBIT_DURATION;
     const angle = orbitProgress * Math.PI * 2;
 
-    const a = 3500; // semi-major axis
-    const e = 0.967; // eccentricity
+    // Halley's orbit parameters
+    const a = SOLAR_SYSTEM_SCALE * 17.834;
+    const e = 0.967;
     const r = a * (1 - e * e) / (1 + e * Math.cos(angle));
 
+    // Update comet position
     comet.position.x = r * Math.cos(angle);
     comet.position.z = r * Math.sin(angle);
     comet.position.y = r * Math.sin(angle) * Math.tan(162 * Math.PI / 180);
 
-    // Update camera to follow comet
-    camera.position.copy(comet.position);
-    camera.position.add(new THREE.Vector3(50, 30, 50));
-    camera.lookAt(comet.position);
+    // Calculate comet's direction of travel
+    const tangent = new THREE.Vector3(
+        -Math.sin(angle),
+        Math.sin(angle) * Math.tan(162 * Math.PI / 180),
+        Math.cos(angle)
+    ).normalize();
+
+    // Position camera relative to comet
+    const cameraOffset = new THREE.Vector3(0, SUN_SIZE * 0.1, -SUN_SIZE * 0.2); // Slightly above and behind
+    camera.position.copy(comet.position).add(cameraOffset);
+
+    // Look ahead of comet's trajectory
+    const lookAhead = comet.position.clone().add(tangent.multiplyScalar(SUN_SIZE * 2));
+    camera.lookAt(lookAhead);
+
+    // Update comet's rotation to face direction of travel
+    comet.lookAt(lookAhead);
 }
 
 function animate() {
@@ -201,16 +234,24 @@ function animate() {
 
     const time = performance.now() * 0.001;
 
-    // Update planet positions
+    // Update planet positions with Kepler's laws
     Object.values(planets).forEach((planet, index) => {
         const orbit = planet.orbit;
-        const speed = 1 / (orbit * 0.1);
-        planet.mesh.position.x = orbit * Math.cos(time * speed);
-        planet.mesh.position.z = orbit * Math.sin(time * speed);
-        planet.mesh.rotation.y += 0.01 / (index + 1);
+        const speed = 1 / Math.pow(orbit / SOLAR_SYSTEM_SCALE, 1.5) * 0.1;
+
+        const angle = time * speed;
+        planet.mesh.position.x = orbit * Math.cos(angle);
+        planet.mesh.position.z = orbit * Math.sin(angle);
+
+        // Planet rotation
+        planet.mesh.rotation.y += 0.002 / (index + 1);
     });
 
     updateCometPosition(time);
+
+    // Ensure sun stays centered and rotating
+    sun.position.set(0, 0, 0);
+    sun.rotation.y += 0.001;
 
     composer.render();
 }
