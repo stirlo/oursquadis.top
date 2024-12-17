@@ -1,156 +1,201 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#603cba">
-    <meta name="msapplication-TileColor" content="#603cba">
-    <meta name="theme-color" content="#ffffff">
-    <title>Our Squad is Top.. Click to Continue...</title>
-    <meta property="og:title" content="Our Squad is Top.." />
-    <meta property="og:description" content="Click to continue your jouney..." />
-    <meta property="og:url" content="https://oursquadis.top" />
-    <meta property="og:image" content="https://oursquadis.top/android-chrome-512x512.png" />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <style>
-        body { 
-            margin: 0; 
-            overflow: hidden;
-            background-color: #000;
-        }
-        canvas { 
-            display: block; 
-        }
-        #loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 2em;
-            text-align: center;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 1000;
-        }
-    </style>
-</head>
+<!-- Head section remains the same -->
 <body>
     <div id="loading">Our Squad is Top</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
     <script>
-        // Scene setup
+        // Scene setup with larger bounds for comet path
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
         // Constants
-        const SOLAR_SYSTEM_SCALE = 200;
-        const SUN_SIZE = 20;
+        const SOLAR_SYSTEM_SCALE = 500;
+        const SUN_SIZE = 50;
+        const ORBIT_DURATION = 80; // seconds for comet orbit
 
-        // Create Orion constellation
-        function createOrion() {
-            const orionGeometry = new THREE.BufferGeometry();
-            // Orion star positions (simplified)
-            const starPositions = [
-                [-5, 10, -50],  // Betelgeuse
-                [5, 8, -50],   // Bellatrix
-                [0, 0, -50],   // Alnilam (belt)
-                [-2, -1, -50], // Alnitak (belt)
-                [2, -1, -50],  // Mintaka (belt)
-                [-3, -10, -50], // Rigel
-                [3, -8, -50]   // Saiph
-            ];
+        // Texture loader
+        const textureLoader = new THREE.TextureLoader();
+        const textures = {};
+        let loadedTextures = 0;
+        const totalTextures = 9;
 
-            const vertices = new Float32Array(starPositions.flat());
-            orionGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        // Planet data with moons
+        const planetData = {
+            mercury: { size: 0.038, distance: 0.4, moons: 0 },
+            venus: { size: 0.095, distance: 0.7, moons: 0 },
+            earth: { size: 0.1, distance: 1, moons: 1 },
+            mars: { size: 0.053, distance: 1.5, moons: 2 },
+            jupiter: { size: 1.12, distance: 5.2, moons: 4 }, // 4 Galilean moons
+            saturn: { size: 0.945, distance: 9.5, moons: 3 }, // Major moons
+            uranus: { size: 0.4, distance: 19.2, moons: 2 },
+            neptune: { size: 0.388, distance: 30.1, moons: 1 }
+        };
 
-            // Create stars
-            const starMaterial = new THREE.PointsMaterial({
-                color: 0xffffff,
-                size: 2,
-                sizeAttenuation: false
+        // Load textures
+        function loadTexture(name) {
+            return new Promise((resolve) => {
+                textureLoader.load(`2k_${name}.jpg`, 
+                    (texture) => {
+                        textures[name] = texture;
+                        resolve();
+                    }
+                );
             });
-            const orionStars = new THREE.Points(orionGeometry, starMaterial);
+        }
 
-            // Create lines connecting stars (belt)
-            const beltGeometry = new THREE.BufferGeometry();
-            const beltVertices = new Float32Array([
-                -2, -1, -50,  // Alnitak
-                0, 0, -50,    // Alnilam
-                2, -1, -50    // Mintaka
+        // Create moon
+        function createMoon(planetSize, distance) {
+            const moonGeometry = new THREE.SphereGeometry(planetSize * 0.2, 32, 32);
+            const moonMaterial = new THREE.MeshPhongMaterial({
+                color: 0xcccccc,
+                shininess: 5
+            });
+            const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+            moon.position.x = distance;
+            return moon;
+        }
+
+        // Create planet with moons
+        function createPlanet(name, data) {
+            const planetGroup = new THREE.Group();
+
+            // Create planet
+            const planetGeometry = new THREE.SphereGeometry(SUN_SIZE * data.size, 32, 32);
+            const planetMaterial = new THREE.MeshPhongMaterial({
+                map: textures[name],
+                shininess: 25
+            });
+            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+            planetGroup.add(planet);
+
+            // Add moons
+            for(let i = 0; i < data.moons; i++) {
+                const moonOrbit = new THREE.Group();
+                const moon = createMoon(SUN_SIZE * data.size, SUN_SIZE * data.size * 2);
+                moonOrbit.rotation.y = (Math.PI * 2 / data.moons) * i;
+                moonOrbit.add(moon);
+                planetGroup.add(moonOrbit);
+            }
+
+            planetGroup.position.x = SOLAR_SYSTEM_SCALE * data.distance;
+            return planetGroup;
+        }
+
+        // Create Halley's Comet
+        function createComet() {
+            const cometGroup = new THREE.Group();
+
+            // Comet head
+            const cometGeometry = new THREE.SphereGeometry(SUN_SIZE * 0.02, 32, 32);
+            const cometMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                emissive: 0x444444
+            });
+            const comet = new THREE.Mesh(cometGeometry, cometMaterial);
+
+            // Comet tail
+            const tailGeometry = new THREE.ConeGeometry(SUN_SIZE * 0.015, SUN_SIZE * 0.2, 32);
+            const tailMaterial = new THREE.MeshPhongMaterial({
+                color: 0x88aaff,
+                transparent: true,
+                opacity: 0.6
+            });
+            const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+            tail.position.y = -SUN_SIZE * 0.1;
+
+            cometGroup.add(comet);
+            cometGroup.add(tail);
+            return cometGroup;
+        }
+
+        // Initialize scene
+        async function initScene() {
+            // Load all textures
+            await Promise.all([
+                loadTexture('sun'),
+                loadTexture('mercury'),
+                loadTexture('venus_surface'),
+                loadTexture('earth_daymap'),
+                loadTexture('mars'),
+                loadTexture('jupiter'),
+                loadTexture('saturn'),
+                loadTexture('uranus'),
+                loadTexture('neptune')
             ]);
-            beltGeometry.setAttribute('position', new THREE.BufferAttribute(beltVertices, 3));
-            const beltMaterial = new THREE.LineBasicMaterial({ color: 0x444444 });
-            const beltLines = new THREE.Line(beltGeometry, beltMaterial);
 
-            scene.add(orionStars);
-            scene.add(beltLines);
+            // Create sun
+            const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 64, 64);
+            const sunMaterial = new THREE.MeshBasicMaterial({
+                map: textures.sun,
+                emissive: 0xffff00,
+                emissiveIntensity: 0.5
+            });
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            scene.add(sun);
+
+            // Add lights
+            const sunLight = new THREE.PointLight(0xffffff, 2, SOLAR_SYSTEM_SCALE * 4);
+            sun.add(sunLight);
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+
+            // Create planets
+            const planets = {};
+            Object.entries(planetData).forEach(([name, data]) => {
+                planets[name] = createPlanet(name, data);
+                scene.add(planets[name]);
+            });
+
+            // Create comet
+            const comet = createComet();
+            scene.add(comet);
+
+            // Add camera to comet for perspective
+            const cometCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+            comet.add(cometCamera);
+            cometCamera.position.z = SUN_SIZE * 0.2;
+            cometCamera.lookAt(sun.position);
+
+            // Animation
+            const clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const elapsedTime = clock.getElapsedTime();
+                const orbitProgress = (elapsedTime % ORBIT_DURATION) / ORBIT_DURATION;
+
+                // Update comet position
+                const angle = orbitProgress * Math.PI * 2;
+                const distance = SOLAR_SYSTEM_SCALE * 35;
+                comet.position.x = Math.cos(angle) * distance;
+                comet.position.z = Math.sin(angle) * distance * 0.5;
+                comet.position.y = Math.sin(angle) * distance * Math.sin(162.3 * Math.PI / 180);
+
+                // Update planets and moons
+                Object.values(planets).forEach((planetGroup, index) => {
+                    const speed = 0.001 / Math.sqrt(planetData[Object.keys(planetData)[index]].distance);
+                    planetGroup.rotation.y += speed;
+                    planetGroup.children.forEach(moon => {
+                        if(moon instanceof THREE.Group) {
+                            moon.rotation.y += speed * 2;
+                        }
+                    });
+                });
+
+                // Use comet camera
+                renderer.render(scene, cometCamera);
+            }
+
+            animate();
+            document.getElementById('loading').style.display = 'none';
         }
 
-        // Create basic solar system
-        const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 64, 64);
-        const sunMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffff00,
-            emissive: 0xffff00,
-            emissiveIntensity: 0.5
-        });
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        scene.add(sun);
-
-        // Add sun light
-        const sunLight = new THREE.PointLight(0xffffff, 2, SOLAR_SYSTEM_SCALE * 2);
-        sun.add(sunLight);
-
-        // Add ambient light
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambientLight);
-
-        // Create stars background
-        const starsGeometry = new THREE.BufferGeometry();
-        const starsVertices = [];
-        for(let i = 0; i < 5000; i++) {
-            starsVertices.push(
-                (Math.random() - 0.5) * 2000,
-                (Math.random() - 0.5) * 2000,
-                (Math.random() - 0.5) * 2000
-            );
-        }
-        starsGeometry.setAttribute('position', 
-            new THREE.Float32BufferAttribute(starsVertices, 3)
-        );
-        const starsMaterial = new THREE.PointsMaterial({
-            color: 0xffffff,
-            size: 1,
-            sizeAttenuation: false
-        });
-        const starField = new THREE.Points(starsGeometry, starsMaterial);
-        scene.add(starField);
-
-        // Add Orion
-        createOrion();
-
-        // Set camera position
-        camera.position.z = 100;
-
-        // Animation
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Rotate sun
-            sun.rotation.y += 0.002;
-
-            renderer.render(scene, camera);
-        }
+        initScene();
 
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -159,12 +204,6 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
         });
-
-        // Start animation
-        animate();
-
-        // Hide loading screen
-        document.getElementById('loading').style.display = 'none';
     </script>
 </body>
 </html>
