@@ -58,52 +58,95 @@
     <div id="controls">Press SPACE to toggle view</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
     <script>
-        // Initialize variables at the top level
+        // Initialize variables
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const textureLoader = new THREE.TextureLoader();
         const planets = [];
 
         // Constants
-        const SCALE = 50;
-        const ORBIT_SPEED = 0.001;
+        const SUN_SIZE = 50;
+        const MOON_DATA = {
+            radius: SUN_SIZE * 0.00247,
+            distance: SUN_SIZE * 0.1,
+            texture: '2k_moon.jpg',
+            rotationSpeed: 0.005
+        };
 
-        // Planet data with correct relative sizes
         const planetData = [
-            { name: 'Sun', radius: 5, distance: 0, color: 0xffff00, rotationSpeed: 0.002 },
-            { name: 'Mercury', radius: 0.383, distance: 10, color: 0x808080, rotationSpeed: 0.004 },
-            { name: 'Venus', radius: 0.949, distance: 15, color: 0xffd700, rotationSpeed: 0.003 },
-            { name: 'Earth', radius: 1, distance: 20, color: 0x0077be, rotationSpeed: 0.005 },
-            { name: 'Mars', radius: 0.532, distance: 25, color: 0xff4500, rotationSpeed: 0.004 },
-            { name: 'Jupiter', radius: 11.209, distance: 35, color: 0xffa500, rotationSpeed: 0.002 },
-            { name: 'Saturn', radius: 9.449, distance: 45, color: 0xffd700, rotationSpeed: 0.002 },
-            { name: 'Uranus', radius: 4.007, distance: 55, color: 0x40e0d0, rotationSpeed: 0.001 },
-            { name: 'Neptune', radius: 3.883, distance: 65, color: 0x0000ff, rotationSpeed: 0.001 }
+            { 
+                name: 'Sun', 
+                radius: SUN_SIZE, 
+                distance: 0, 
+                texture: '2k_sun.jpg', 
+                rotationSpeed: 0.002,
+                emissiveIntensity: 1,
+                lightIntensity: 2
+            },
+            { name: 'Mercury', radius: SUN_SIZE * 0.0035, distance: SUN_SIZE * 2, texture: '2k_mercury.jpg', rotationSpeed: 0.004 },
+            { name: 'Venus', radius: SUN_SIZE * 0.0087, distance: SUN_SIZE * 3, texture: '2k_venus_surface.jpg', rotationSpeed: 0.003 },
+            { name: 'Earth', radius: SUN_SIZE * 0.0091, distance: SUN_SIZE * 4, texture: '2k_earth_daymap.jpg', rotationSpeed: 0.005 },
+            { name: 'Mars', radius: SUN_SIZE * 0.0048, distance: SUN_SIZE * 5, texture: '2k_mars.jpg', rotationSpeed: 0.004 },
+            { name: 'Jupiter', radius: SUN_SIZE * 0.1027, distance: SUN_SIZE * 7, texture: '2k_jupiter.jpg', rotationSpeed: 0.002 },
+            { name: 'Saturn', radius: SUN_SIZE * 0.0866, distance: SUN_SIZE * 9, texture: '2k_saturn.jpg', rotationSpeed: 0.002 },
+            { name: 'Uranus', radius: SUN_SIZE * 0.0368, distance: SUN_SIZE * 11, texture: '2k_uranus.jpg', rotationSpeed: 0.001 },
+            { name: 'Neptune', radius: SUN_SIZE * 0.0357, distance: SUN_SIZE * 13, texture: '2k_neptune.jpg', rotationSpeed: 0.001 }
         ];
 
+        function createMilkyWayBackground() {
+            const geometry = new THREE.SphereGeometry(5000, 64, 64);
+            geometry.scale(-1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({
+                map: textureLoader.load('milkyway.jpg'),
+                side: THREE.BackSide
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.rotation.z = Math.PI / 2;
+            scene.add(mesh);
+        }
+
         function init() {
-            // Setup renderer
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            // Setup camera
-            camera.position.set(0, 30, 100);
+            camera.position.set(0, 100, 300);
             camera.lookAt(scene.position);
 
-            // Add lights
-            const ambientLight = new THREE.AmbientLight(0x404040);
+            // Enhanced lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
             scene.add(ambientLight);
 
-            const pointLight = new THREE.PointLight(0xffffff, 2, 300);
-            scene.add(pointLight);
+            const sunLight = new THREE.PointLight(0xffffff, 3, 1000);
+            scene.add(sunLight);
+
+            // Add bloom effect
+            const renderScene = new THREE.RenderPass(scene, camera);
+            const bloomPass = new THREE.UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                1.5,  // strength
+                0.4,  // radius
+                0.85  // threshold
+            );
+
+            const composer = new THREE.EffectComposer(renderer);
+            composer.addPass(renderScene);
+            composer.addPass(bloomPass);
+
+            // Create Milky Way background
+            createMilkyWayBackground();
 
             // Create planets
             planetData.forEach(data => {
                 const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
                 const material = new THREE.MeshPhongMaterial({
-                    color: data.color,
+                    map: textureLoader.load(data.texture),
                     shininess: data.name === 'Sun' ? 0 : 30
                 });
 
@@ -111,66 +154,47 @@
 
                 if (data.name === 'Sun') {
                     material.emissive = new THREE.Color(0xffff00);
-                    material.emissiveIntensity = 0.5;
+                    material.emissiveIntensity = data.emissiveIntensity;
                     scene.add(planet);
                     planets.push({ mesh: planet, data: data });
+
+                    // Add sun glow
+                    const sunGlow = new THREE.PointLight(0xffff00, 2, 500);
+                    planet.add(sunGlow);
+                } else if (data.name === 'Earth') {
+                    const earthGroup = new THREE.Group();
+                    const moonOrbit = new THREE.Group();
+
+                    // Create moon
+                    const moonGeometry = new THREE.SphereGeometry(MOON_DATA.radius, 32, 32);
+                    const moonMaterial = new THREE.MeshPhongMaterial({
+                        map: textureLoader.load(MOON_DATA.texture)
+                    });
+                    const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+                    moon.position.x = MOON_DATA.distance;
+
+                    moonOrbit.add(moon);
+                    earthGroup.add(moonOrbit);
+
+                    planet.position.x = data.distance;
+                    earthGroup.add(planet);
+                    scene.add(earthGroup);
+
+                    planets.push({ 
+                        mesh: planet, 
+                        orbit: earthGroup, 
+                        moon: { mesh: moon, orbit: moonOrbit },
+                        data: data 
+                    });
                 } else {
                     const orbitGroup = new THREE.Group();
                     planet.position.x = data.distance;
                     orbitGroup.add(planet);
                     scene.add(orbitGroup);
                     planets.push({ mesh: planet, orbit: orbitGroup, data: data });
-
-                    // Add orbit line
-                    const orbitGeometry = new THREE.RingGeometry(data.distance - 0.1, data.distance + 0.1, 64);
-                    const orbitMaterial = new THREE.MeshBasicMaterial({
-                        color: 0x666666,
-                        side: THREE.DoubleSide,
-                        opacity: 0.3,
-                        transparent: true
-                    });
-                    const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
-                    orbit.rotation.x = Math.PI / 2;
-                    scene.add(orbit);
                 }
             });
 
-            // Add Saturn's rings
-            const saturnIndex = planetData.findIndex(p => p.name === 'Saturn');
-            if (saturnIndex !== -1) {
-                const saturn = planets[saturnIndex].mesh;
-                const ringGeometry = new THREE.RingGeometry(11, 20, 32);
-                const ringMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xffd700,
-                    side: THREE.DoubleSide,
-                    opacity: 0.5,
-                    transparent: true
-                });
-                const rings = new THREE.Mesh(ringGeometry, ringMaterial);
-                rings.rotation.x = Math.PI / 2;
-                saturn.add(rings);
-            }
-
-            // Add stars
-            const starsGeometry = new THREE.BufferGeometry();
-            const starsMaterial = new THREE.PointsMaterial({
-                color: 0xffffff,
-                size: 0.1
-            });
-
-            const starsVertices = [];
-            for (let i = 0; i < 10000; i++) {
-                const x = (Math.random() - 0.5) * 2000;
-                const y = (Math.random() - 0.5) * 2000;
-                const z = (Math.random() - 0.5) * 2000;
-                starsVertices.push(x, y, z);
-            }
-
-            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
-            const stars = new THREE.Points(starsGeometry, starsMaterial);
-            scene.add(stars);
-
-            // Hide loading screen
             document.getElementById('loading').style.display = 'none';
         }
 
@@ -180,7 +204,12 @@
             planets.forEach(planet => {
                 if (planet.data.name !== 'Sun') {
                     // Orbit around sun
-                    planet.orbit.rotation.y += ORBIT_SPEED / (planet.data.distance / 10);
+                    planet.orbit.rotation.y += 0.001 / Math.sqrt(planet.data.distance);
+
+                    // If it's Earth, animate the moon
+                    if (planet.data.name === 'Earth' && planet.moon) {
+                        planet.moon.orbit.rotation.y += 0.02;
+                    }
                 }
                 // Self rotation
                 planet.mesh.rotation.y += planet.data.rotationSpeed;
@@ -202,10 +231,10 @@
             if (event.code === 'Space') {
                 alternateView = !alternateView;
                 if (alternateView) {
-                    camera.position.set(0, 100, 0);
+                    camera.position.set(0, 300, 0);
                     camera.lookAt(0, 0, 0);
                 } else {
-                    camera.position.set(0, 30, 100);
+                    camera.position.set(0, 100, 300);
                     camera.lookAt(scene.position);
                 }
             }
