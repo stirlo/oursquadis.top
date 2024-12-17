@@ -44,56 +44,139 @@
 <body>
     <div id="loading">Our Squad is Top</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.159.0/examples/js/controls/OrbitControls.js"></script>
     <script>
         // Scene setup
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
+        // Add OrbitControls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 50;
+        controls.maxDistance = 500;
+
         // Constants
-        const SOLAR_SYSTEM_SCALE = 100;
-        const SUN_SIZE = 15;
+        const SOLAR_SYSTEM_SCALE = 200;
+        const SUN_SIZE = 20;
 
-        // Basic geometry for testing
-        const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 32, 32);
-        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        scene.add(sun);
+        // Texture loader
+        const textureLoader = new THREE.TextureLoader();
+        const textures = {};
+        let loadedTextures = 0;
+        const totalTextures = 9;
 
-        // Add a simple planet
-        const planetGeometry = new THREE.SphereGeometry(SUN_SIZE * 0.3, 32, 32);
-        const planetMaterial = new THREE.MeshBasicMaterial({ color: 0x2233ff });
-        const planet = new THREE.Mesh(planetGeometry, planetMaterial);
-        planet.position.x = SOLAR_SYSTEM_SCALE * 0.3;
-        scene.add(planet);
+        // Load textures with progress tracking
+        function loadTexture(name, path) {
+            textureLoader.load(
+                path,
+                function(texture) {
+                    textures[name] = texture;
+                    loadedTextures++;
+                    if (loadedTextures === totalTextures) {
+                        initializeScene();
+                    }
+                },
+                undefined,
+                function(err) {
+                    console.error('Error loading texture:', name, err);
+                }
+            );
+        }
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambientLight);
+        // Load all textures
+        loadTexture('sun', '2k_sun.jpg');
+        loadTexture('mercury', '2k_mercury.jpg');
+        loadTexture('venus', '2k_venus_surface.jpg');
+        loadTexture('earth', '2k_earth_daymap.jpg');
+        loadTexture('mars', '2k_mars.jpg');
+        loadTexture('jupiter', '2k_jupiter.jpg');
+        loadTexture('saturn', '2k_saturn.jpg');
+        loadTexture('uranus', '2k_uranus.jpg');
+        loadTexture('neptune', '2k_neptune.jpg');
 
-        const pointLight = new THREE.PointLight(0xffffff, 1);
-        pointLight.position.set(0, 20, 20);
-        scene.add(pointLight);
+        function createPlanet(size, texture, distance, rotationSpeed = 0.01) {
+            const geometry = new THREE.SphereGeometry(size, 32, 32);
+            const material = new THREE.MeshPhongMaterial({
+                map: texture,
+                shininess: 25
+            });
+            const planet = new THREE.Mesh(geometry, material);
+            planet.position.x = distance;
+            planet.userData = { 
+                rotationSpeed,
+                orbitSpeed: 0.001 / Math.sqrt(distance),
+                distance
+            };
+            return planet;
+        }
 
-        // Camera position
-        camera.position.z = 100;
+        function initializeScene() {
+            // Create sun
+            const sunGeometry = new THREE.SphereGeometry(SUN_SIZE, 64, 64);
+            const sunMaterial = new THREE.MeshBasicMaterial({
+                map: textures.sun,
+                emissive: 0xffff00,
+                emissiveIntensity: 0.5
+            });
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            scene.add(sun);
 
-        // Animation
-        function animate() {
-            requestAnimationFrame(animate);
+            // Add sun light
+            const sunLight = new THREE.PointLight(0xffffff, 2, SOLAR_SYSTEM_SCALE * 2);
+            sun.add(sunLight);
 
-            // Rotate sun
-            sun.rotation.y += 0.005;
+            // Create planets
+            const planets = {
+                mercury: createPlanet(SUN_SIZE * 0.038, textures.mercury, SOLAR_SYSTEM_SCALE * 0.4, 0.015),
+                venus: createPlanet(SUN_SIZE * 0.095, textures.venus, SOLAR_SYSTEM_SCALE * 0.7, 0.012),
+                earth: createPlanet(SUN_SIZE * 0.1, textures.earth, SOLAR_SYSTEM_SCALE * 1, 0.01),
+                mars: createPlanet(SUN_SIZE * 0.053, textures.mars, SOLAR_SYSTEM_SCALE * 1.5, 0.009),
+                jupiter: createPlanet(SUN_SIZE * 1.12, textures.jupiter, SOLAR_SYSTEM_SCALE * 2.2, 0.005),
+                saturn: createPlanet(SUN_SIZE * 0.945, textures.saturn, SOLAR_SYSTEM_SCALE * 2.8, 0.004),
+                uranus: createPlanet(SUN_SIZE * 0.4, textures.uranus, SOLAR_SYSTEM_SCALE * 3.4, 0.003),
+                neptune: createPlanet(SUN_SIZE * 0.388, textures.neptune, SOLAR_SYSTEM_SCALE * 3.9, 0.002)
+            };
 
-            // Orbit planet
-            const time = Date.now() * 0.001;
-            planet.position.x = Math.cos(time) * SOLAR_SYSTEM_SCALE * 0.3;
-            planet.position.z = Math.sin(time) * SOLAR_SYSTEM_SCALE * 0.3;
-            planet.rotation.y += 0.01;
+            Object.values(planets).forEach(planet => scene.add(planet));
 
-            renderer.render(scene, camera);
+            // Set initial camera position
+            camera.position.set(SOLAR_SYSTEM_SCALE * 1.5, SOLAR_SYSTEM_SCALE * 0.5, SOLAR_SYSTEM_SCALE * 1.5);
+            camera.lookAt(0, 0, 0);
+
+            // Hide loading screen
+            document.getElementById('loading').style.display = 'none';
+
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Update controls
+                controls.update();
+
+                // Rotate sun
+                sun.rotation.y += 0.002;
+
+                // Update planets
+                Object.values(planets).forEach(planet => {
+                    // Self rotation
+                    planet.rotation.y += planet.userData.rotationSpeed;
+
+                    // Orbit
+                    const angle = Date.now() * planet.userData.orbitSpeed;
+                    planet.position.x = Math.cos(angle) * planet.userData.distance;
+                    planet.position.z = Math.sin(angle) * planet.userData.distance;
+                });
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
         }
 
         // Handle window resize
@@ -101,13 +184,8 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
         });
-
-        // Start animation
-        animate();
-
-        // Hide loading screen after everything is set up
-        document.getElementById('loading').style.display = 'none';
     </script>
 </body>
 </html>
