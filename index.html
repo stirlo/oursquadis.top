@@ -66,8 +66,17 @@
         const textureLoader = new THREE.TextureLoader();
         const planets = [];
 
+        // Debug logging for texture loading
+        textureLoader.onLoad = function() {
+            console.log('Texture loaded successfully');
+        };
+
+        textureLoader.onError = function(err) {
+            console.error('Error loading texture:', err);
+        };
+
         // Constants
-        const SUN_SIZE = 50;
+        const SUN_SIZE = 30;
         const MOON_DATA = {
             radius: SUN_SIZE * 0.00247,
             distance: SUN_SIZE * 0.1,
@@ -83,14 +92,14 @@
                 texture: '2k_sun.jpg', 
                 rotationSpeed: 0.002
             },
-            { name: 'Mercury', radius: SUN_SIZE * 0.0035, distance: SUN_SIZE * 2, texture: '2k_mercury.jpg', rotationSpeed: 0.004 },
-            { name: 'Venus', radius: SUN_SIZE * 0.0087, distance: SUN_SIZE * 3, texture: '2k_venus_surface.jpg', rotationSpeed: 0.003 },
-            { name: 'Earth', radius: SUN_SIZE * 0.0091, distance: SUN_SIZE * 4, texture: '2k_earth_daymap.jpg', rotationSpeed: 0.005 },
-            { name: 'Mars', radius: SUN_SIZE * 0.0048, distance: SUN_SIZE * 5, texture: '2k_mars.jpg', rotationSpeed: 0.004 },
-            { name: 'Jupiter', radius: SUN_SIZE * 0.1027, distance: SUN_SIZE * 7, texture: '2k_jupiter.jpg', rotationSpeed: 0.002 },
-            { name: 'Saturn', radius: SUN_SIZE * 0.0866, distance: SUN_SIZE * 9, texture: '2k_saturn.jpg', rotationSpeed: 0.002 },
-            { name: 'Uranus', radius: SUN_SIZE * 0.0368, distance: SUN_SIZE * 11, texture: '2k_uranus.jpg', rotationSpeed: 0.001 },
-            { name: 'Neptune', radius: SUN_SIZE * 0.0357, distance: SUN_SIZE * 13, texture: '2k_neptune.jpg', rotationSpeed: 0.001 }
+            { name: 'Mercury', radius: SUN_SIZE * 0.0035, distance: SUN_SIZE * 4, texture: '2k_mercury.jpg', rotationSpeed: 0.004 },
+            { name: 'Venus', radius: SUN_SIZE * 0.0087, distance: SUN_SIZE * 6, texture: '2k_venus_surface.jpg', rotationSpeed: 0.003 },
+            { name: 'Earth', radius: SUN_SIZE * 0.0091, distance: SUN_SIZE * 8, texture: '2k_earth_daymap.jpg', rotationSpeed: 0.005 },
+            { name: 'Mars', radius: SUN_SIZE * 0.0048, distance: SUN_SIZE * 10, texture: '2k_mars.jpg', rotationSpeed: 0.004 },
+            { name: 'Jupiter', radius: SUN_SIZE * 0.1027, distance: SUN_SIZE * 14, texture: '2k_jupiter.jpg', rotationSpeed: 0.002 },
+            { name: 'Saturn', radius: SUN_SIZE * 0.0866, distance: SUN_SIZE * 18, texture: '2k_saturn.jpg', rotationSpeed: 0.002 },
+            { name: 'Uranus', radius: SUN_SIZE * 0.0368, distance: SUN_SIZE * 22, texture: '2k_uranus.jpg', rotationSpeed: 0.001 },
+            { name: 'Neptune', radius: SUN_SIZE * 0.0357, distance: SUN_SIZE * 26, texture: '2k_neptune.jpg', rotationSpeed: 0.001 }
         ];
 
         function createMilkyWayBackground() {
@@ -110,69 +119,81 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             document.body.appendChild(renderer.domElement);
 
-            camera.position.set(0, 100, 300);
-            camera.lookAt(scene.position);
+            // Adjust camera and initial view
+            camera.position.set(0, 200, 600);
+            camera.lookAt(0, 0, 0);
 
-            // Enhanced lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            // Enhanced lighting setup
+            const ambientLight = new THREE.AmbientLight(0x404040, 1);
             scene.add(ambientLight);
 
-            const sunLight = new THREE.PointLight(0xffffff, 3, 1000);
+            const sunLight = new THREE.PointLight(0xffffff, 5, 1000);
+            sunLight.position.set(0, 0, 0);
             scene.add(sunLight);
 
             // Create Milky Way background
             createMilkyWayBackground();
 
-            // Create planets
+            // Create planets with error handling
             planetData.forEach(data => {
-                const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
-                const material = new THREE.MeshPhongMaterial({
-                    map: textureLoader.load(data.texture),
-                    shininess: data.name === 'Sun' ? 0 : 30
-                });
-
-                const planet = new THREE.Mesh(geometry, material);
-
-                if (data.name === 'Sun') {
-                    material.emissive = new THREE.Color(0xffff00);
-                    material.emissiveIntensity = 0.5;
-                    scene.add(planet);
-                    planets.push({ mesh: planet, data: data });
-
-                    // Add sun glow
-                    const sunGlow = new THREE.PointLight(0xffff00, 2, 500);
-                    planet.add(sunGlow);
-                } else if (data.name === 'Earth') {
-                    const earthGroup = new THREE.Group();
-                    const moonOrbit = new THREE.Group();
-
-                    // Create moon
-                    const moonGeometry = new THREE.SphereGeometry(MOON_DATA.radius, 32, 32);
-                    const moonMaterial = new THREE.MeshPhongMaterial({
-                        map: textureLoader.load(MOON_DATA.texture)
+                try {
+                    const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
+                    const material = new THREE.MeshPhongMaterial({
+                        map: textureLoader.load(data.texture, 
+                            undefined, 
+                            undefined, 
+                            function(err) {
+                                console.error('Error loading texture for ' + data.name + ':', err);
+                            }
+                        ),
+                        shininess: data.name === 'Sun' ? 0 : 30
                     });
-                    const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-                    moon.position.x = MOON_DATA.distance;
 
-                    moonOrbit.add(moon);
-                    earthGroup.add(moonOrbit);
+                    const planet = new THREE.Mesh(geometry, material);
 
-                    planet.position.x = data.distance;
-                    earthGroup.add(planet);
-                    scene.add(earthGroup);
+                    if (data.name === 'Sun') {
+                        material.emissive = new THREE.Color(0xffff00);
+                        material.emissiveIntensity = 0.5;
+                        scene.add(planet);
+                        planets.push({ mesh: planet, data: data });
 
-                    planets.push({ 
-                        mesh: planet, 
-                        orbit: earthGroup, 
-                        moon: { mesh: moon, orbit: moonOrbit },
-                        data: data 
-                    });
-                } else {
-                    const orbitGroup = new THREE.Group();
-                    planet.position.x = data.distance;
-                    orbitGroup.add(planet);
-                    scene.add(orbitGroup);
-                    planets.push({ mesh: planet, orbit: orbitGroup, data: data });
+                        // Add sun glow
+                        const sunGlow = new THREE.PointLight(0xffff00, 2, 500);
+                        planet.add(sunGlow);
+                    } else if (data.name === 'Earth') {
+                        const earthGroup = new THREE.Group();
+                        const moonOrbit = new THREE.Group();
+
+                        // Create moon
+                        const moonGeometry = new THREE.SphereGeometry(MOON_DATA.radius, 32, 32);
+                        const moonMaterial = new THREE.MeshPhongMaterial({
+                            map: textureLoader.load(MOON_DATA.texture)
+                        });
+                        const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+                        moon.position.x = MOON_DATA.distance;
+
+                        moonOrbit.add(moon);
+                        earthGroup.add(moonOrbit);
+
+                        planet.position.x = data.distance;
+                        earthGroup.add(planet);
+                        scene.add(earthGroup);
+
+                        planets.push({ 
+                            mesh: planet, 
+                            orbit: earthGroup, 
+                            moon: { mesh: moon, orbit: moonOrbit },
+                            data: data 
+                        });
+                    } else {
+                        const orbitGroup = new THREE.Group();
+                        planet.position.x = data.distance;
+                        orbitGroup.add(planet);
+                        scene.add(orbitGroup);
+                        planets.push({ mesh: planet, orbit: orbitGroup, data: data });
+                    }
+                } catch (error) {
+                    console.error('Error creating planet ' + data.name + ':', error);
                 }
             });
 
@@ -215,8 +236,8 @@
                     camera.position.set(0, 300, 0);
                     camera.lookAt(0, 0, 0);
                 } else {
-                    camera.position.set(0, 100, 300);
-                    camera.lookAt(scene.position);
+                    camera.position.set(0, 200, 600);
+                    camera.lookAt(0, 0, 0);
                 }
             }
         });
