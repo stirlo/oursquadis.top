@@ -2,7 +2,20 @@
 <html>
 <head>
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#603cba">
+    <meta name="msapplication-TileColor" content="#603cba">
+    <meta name="theme-color" content="#ffffff">
     <title>Our Squad is Top.. Click to Continue...</title>
+    <meta property="og:title" content="Our Squad is Top.." />
+    <meta property="og:description" content="Click to continue your jouney..." />
+    <meta property="og:url" content="https://oursquadis.top" />
+    <meta property="og:image" content="https://oursquadis.top/android-chrome-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
     <style>
         body { 
             margin: 0; 
@@ -54,7 +67,7 @@
         // Constants
         const SOLAR_SYSTEM_SCALE = 200;
         const SUN_SIZE = 20;
-        const TIME_SCALE = 0.5; // Adjust this to speed up/slow down the entire system
+        const TIME_SCALE = 0.5;
 
         // Accurate orbital periods in Earth days
         const ORBITAL_PERIODS = {
@@ -65,7 +78,8 @@
             jupiter: 4333,
             saturn: 10759,
             uranus: 30687,
-            neptune: 60190
+            neptune: 60190,
+            pluto: 90560
         };
 
         // Texture loader
@@ -74,52 +88,88 @@
         // Create Milky Way background
         const createMilkyWayBackground = () => {
             const geometry = new THREE.SphereGeometry(5000, 64, 64);
-            // Flip the geometry inside out
             geometry.scale(-1, 1, 1);
-
             const material = new THREE.MeshBasicMaterial({
                 map: textureLoader.load('milkyway.jpg'),
                 side: THREE.BackSide
             });
-
             const mesh = new THREE.Mesh(geometry, material);
-            // Rotate to correct orientation
             mesh.rotation.z = Math.PI / 2;
             scene.add(mesh);
         };
 
-        // Planet data
+        // Planet data with accurate sizes relative to Earth (Earth = 1)
         const planetData = [
-            { name: 'Sun', size: 1, distance: 0, texture: '2k_sun.jpg', emissive: true },
-            { name: 'Mercury', size: 0.038, distance: 50, texture: '2k_mercury.jpg', period: ORBITAL_PERIODS.mercury },
-            { name: 'Venus', size: 0.095, distance: 75, texture: '2k_venus_surface.jpg', period: ORBITAL_PERIODS.venus },
-            { name: 'Earth', size: 0.1, distance: 100, texture: '2k_earth_daymap.jpg', period: ORBITAL_PERIODS.earth },
-            { name: 'Mars', size: 0.053, distance: 150, texture: '2k_mars.jpg', period: ORBITAL_PERIODS.mars },
-            { name: 'Jupiter', size: 1.12, distance: 250, texture: '2k_jupiter.jpg', period: ORBITAL_PERIODS.jupiter },
-            { name: 'Saturn', size: 0.945, distance: 350, texture: '2k_saturn.jpg', period: ORBITAL_PERIODS.saturn },
-            { name: 'Uranus', size: 0.4, distance: 400, texture: '2k_uranus.jpg', period: ORBITAL_PERIODS.uranus },
-            { name: 'Neptune', size: 0.388, distance: 450, texture: '2k_neptune.jpg', period: ORBITAL_PERIODS.neptune }
+            { name: 'Sun', size: 109, distance: 0, texture: '2k_sun.jpg', emissive: true },
+            { name: 'Mercury', size: 0.383, distance: 50, texture: '2k_mercury.jpg', period: ORBITAL_PERIODS.mercury },
+            { name: 'Venus', size: 0.949, distance: 75, texture: '2k_venus_surface.jpg', period: ORBITAL_PERIODS.venus },
+            { name: 'Earth', size: 1, distance: 100, texture: '2k_earth_daymap.jpg', period: ORBITAL_PERIODS.earth },
+            { name: 'Mars', size: 0.532, distance: 150, texture: '2k_mars.jpg', period: ORBITAL_PERIODS.mars },
+            { name: 'Jupiter', size: 11.209, distance: 250, texture: '2k_jupiter.jpg', period: ORBITAL_PERIODS.jupiter },
+            { name: 'Saturn', size: 9.449, distance: 350, texture: '2k_saturn.jpg', period: ORBITAL_PERIODS.saturn },
+            { name: 'Uranus', size: 4.007, distance: 400, texture: '2k_uranus.jpg', period: ORBITAL_PERIODS.uranus },
+            { name: 'Neptune', size: 3.883, distance: 450, texture: '2k_neptune.jpg', period: ORBITAL_PERIODS.neptune },
+            { name: 'Pluto', size: 0.187, distance: 500, color: 0x9B7653, period: ORBITAL_PERIODS.pluto, isDwarf: true }
         ];
 
-        // Moon data (Earth's moon with texture, others with basic materials)
+        // Moon data with NASA-accurate colors and sizes
         const moonData = {
-            earth: { size: 0.027, distance: 15, texture: '2k_moon.jpg', period: 27.3 },
+            earth: { size: 0.2724, distance: 15, texture: '2k_moon.jpg', period: 27.3 },
             mars: [
-                { name: 'Phobos', size: 0.005, distance: 8, color: 0x888888, period: 0.3 },
-                { name: 'Deimos', size: 0.003, distance: 12, color: 0x666666, period: 1.2 }
+                { name: 'Phobos', size: 0.002, distance: 8, color: 0x887766, period: 0.3 },
+                { name: 'Deimos', size: 0.001, distance: 12, color: 0x776655, period: 1.2 }
             ],
-            // Add other moons as needed
+            jupiter: [
+                { name: 'Io', size: 0.286, distance: 25, color: 0xFFD700, period: 1.8 },
+                { name: 'Europa', size: 0.245, distance: 30, color: 0xFFFAFA, period: 3.6 },
+                { name: 'Ganymede', size: 0.413, distance: 35, color: 0x8B8989, period: 7.2 },
+                { name: 'Callisto', size: 0.378, distance: 40, color: 0x696969, period: 16.7 }
+            ],
+            saturn: [
+                { name: 'Titan', size: 0.404, distance: 35, color: 0xFFA500, period: 15.9 },
+                { name: 'Rhea', size: 0.120, distance: 30, color: 0xD3D3D3, period: 4.5 },
+                { name: 'Iapetus', size: 0.115, distance: 45, color: 0x8B8378, period: 79.3 }
+            ],
+            uranus: [
+                { name: 'Titania', size: 0.124, distance: 25, color: 0xC0C0C0, period: 8.7 },
+                { name: 'Oberon', size: 0.119, distance: 30, color: 0xA9A9A9, period: 13.5 },
+                { name: 'Umbriel', size: 0.092, distance: 35, color: 0x808080, period: 4.1 },
+                { name: 'Ariel', size: 0.091, distance: 40, color: 0xDCDCDC, period: 2.5 }
+            ],
+            neptune: [
+                { name: 'Triton', size: 0.212, distance: 30, color: 0xE6E6FA, period: 5.9 },
+                { name: 'Nereid', size: 0.027, distance: 35, color: 0xD3D3D3, period: 360 }
+            ]
+        };
+
+        // Create Saturn's rings
+        const createSaturnRings = (planet) => {
+            const ringGeometry = new THREE.RingGeometry(15, 25, 64);
+            const ringMaterial = new THREE.MeshBasicMaterial({
+                color: 0xA88F7D,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.8
+            });
+            const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+            rings.rotation.x = Math.PI / 2;
+            planet.add(rings);
         };
 
         // Create planets
         const planets = planetData.map(data => {
             const planetGroup = new THREE.Group();
 
-            const geometry = new THREE.SphereGeometry(SUN_SIZE * data.size, 32, 32);
-            const material = new THREE.MeshPhongMaterial({
-                map: textureLoader.load(data.texture),
-                shininess: data.emissive ? 0 : 30
-            });
+            const geometry = new THREE.SphereGeometry(SUN_SIZE * (data.size * 0.01), 32, 32);
+            const material = data.texture ? 
+                new THREE.MeshPhongMaterial({
+                    map: textureLoader.load(data.texture),
+                    shininess: data.emissive ? 0 : 30
+                }) :
+                new THREE.MeshPhongMaterial({ 
+                    color: data.color,
+                    shininess: 30
+                });
 
             if (data.emissive) {
                 material.emissive = new THREE.Color(0xffff00);
@@ -133,7 +183,11 @@
             }
 
             planetGroup.add(planet);
-            scene.add(planetGroup);
+
+            // Add Saturn's rings
+            if (data.name === 'Saturn') {
+                createSaturnRings(planet);
+            }
 
             // Add moons if applicable
             if (moonData[data.name.toLowerCase()]) {
@@ -142,7 +196,7 @@
 
                 moons.forEach(moon => {
                     const moonGroup = new THREE.Group();
-                    const moonGeometry = new THREE.SphereGeometry(SUN_SIZE * moon.size, 16, 16);
+                    const moonGeometry = new THREE.SphereGeometry(SUN_SIZE * moon.size * 0.01, 16, 16);
                     const moonMaterial = moon.texture ? 
                         new THREE.MeshPhongMaterial({ map: textureLoader.load(moon.texture) }) :
                         new THREE.MeshPhongMaterial({ color: moon.color });
@@ -154,6 +208,7 @@
                 });
             }
 
+            scene.add(planetGroup);
             return planetGroup;
         });
 
@@ -199,6 +254,21 @@
                     // Planet rotation
                     const planet = planetGroup.children[0];
                     planet.rotation.y += 0.02 / data.period;
+
+                    // Animate moons
+                    if (moonData[data.name.toLowerCase()]) {
+                        const moons = planet.children.filter(child => child instanceof THREE.Group);
+                        moons.forEach((moonGroup, moonIndex) => {
+                            const moonData = Array.isArray(moonData[data.name.toLowerCase()]) ?
+                                moonData[data.name.toLowerCase()][moonIndex] :
+                                moonData[data.name.toLowerCase()];
+
+                            const moonSpeed = (2 * Math.PI) / moonData.period;
+                            const moonAngle = time * moonSpeed;
+
+                            moonGroup.rotation.y = moonAngle;
+                        });
+                    }
                 }
             });
 
