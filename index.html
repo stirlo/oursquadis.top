@@ -2,11 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-   <meta http-equiv="Content-Security-Policy" content="default-src 'self' cdnjs.cloudflare.com *.jsdelivr.net data: blob: 'unsafe-inline' 'unsafe-eval';
-    script-src 'self' cdnjs.cloudflare.com *.jsdelivr.net 'unsafe-inline' 'unsafe-eval';
-    style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob: *;
-    connect-src 'self' *;">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -80,11 +76,11 @@
         };
 
         // Constants
-        const SUN_SIZE = 30;
+        const SUN_SIZE = 25;
         const MOON_DATA = {
             radius: SUN_SIZE * 0.00247,
             distance: SUN_SIZE * 0.1,
-            texture: '2k_moon.jpg',
+            texture: '/2k_moon.jpg',
             rotationSpeed: 0.005
         };
 
@@ -93,24 +89,24 @@
                 name: 'Sun', 
                 radius: SUN_SIZE, 
                 distance: 0, 
-                texture: '2k_sun.jpg', 
+                texture: '/2k_sun.jpg', 
                 rotationSpeed: 0.002
             },
-            { name: 'Mercury', radius: SUN_SIZE * 0.0035, distance: SUN_SIZE * 4, texture: '2k_mercury.jpg', rotationSpeed: 0.004 },
-            { name: 'Venus', radius: SUN_SIZE * 0.0087, distance: SUN_SIZE * 6, texture: '2k_venus_surface.jpg', rotationSpeed: 0.003 },
-            { name: 'Earth', radius: SUN_SIZE * 0.0091, distance: SUN_SIZE * 8, texture: '2k_earth_daymap.jpg', rotationSpeed: 0.005 },
-            { name: 'Mars', radius: SUN_SIZE * 0.0048, distance: SUN_SIZE * 10, texture: '2k_mars.jpg', rotationSpeed: 0.004 },
-            { name: 'Jupiter', radius: SUN_SIZE * 0.1027, distance: SUN_SIZE * 14, texture: '2k_jupiter.jpg', rotationSpeed: 0.002 },
-            { name: 'Saturn', radius: SUN_SIZE * 0.0866, distance: SUN_SIZE * 18, texture: '2k_saturn.jpg', rotationSpeed: 0.002 },
-            { name: 'Uranus', radius: SUN_SIZE * 0.0368, distance: SUN_SIZE * 22, texture: '2k_uranus.jpg', rotationSpeed: 0.001 },
-            { name: 'Neptune', radius: SUN_SIZE * 0.0357, distance: SUN_SIZE * 26, texture: '2k_neptune.jpg', rotationSpeed: 0.001 }
+            { name: 'Mercury', radius: SUN_SIZE * 0.0035, distance: SUN_SIZE * 4, texture: '/2k_mercury.jpg', rotationSpeed: 0.004 },
+            { name: 'Venus', radius: SUN_SIZE * 0.0087, distance: SUN_SIZE * 6, texture: '/2k_venus_surface.jpg', rotationSpeed: 0.003 },
+            { name: 'Earth', radius: SUN_SIZE * 0.0091, distance: SUN_SIZE * 8, texture: '/2k_earth_daymap.jpg', rotationSpeed: 0.005 },
+            { name: 'Mars', radius: SUN_SIZE * 0.0048, distance: SUN_SIZE * 10, texture: '/2k_mars.jpg', rotationSpeed: 0.004 },
+            { name: 'Jupiter', radius: SUN_SIZE * 0.1027, distance: SUN_SIZE * 14, texture: '/2k_jupiter.jpg', rotationSpeed: 0.002 },
+            { name: 'Saturn', radius: SUN_SIZE * 0.0866, distance: SUN_SIZE * 18, texture: '/2k_saturn.jpg', rotationSpeed: 0.002 },
+            { name: 'Uranus', radius: SUN_SIZE * 0.0368, distance: SUN_SIZE * 22, texture: '/2k_uranus.jpg', rotationSpeed: 0.001 },
+            { name: 'Neptune', radius: SUN_SIZE * 0.0357, distance: SUN_SIZE * 26, texture: '/2k_neptune.jpg', rotationSpeed: 0.001 }
         ];
 
         function createMilkyWayBackground() {
             const geometry = new THREE.SphereGeometry(5000, 64, 64);
             geometry.scale(-1, 1, 1);
             const material = new THREE.MeshBasicMaterial({
-                map: textureLoader.load('milkyway.jpg'),
+                map: textureLoader.load('/milkyway.jpg'),
                 side: THREE.BackSide
             });
             const mesh = new THREE.Mesh(geometry, material);
@@ -124,7 +120,7 @@
             document.body.appendChild(renderer.domElement);
 
             // Adjust camera and initial view
-            camera.position.set(0, 200, 600);
+            camera.position.set(0, 300, 1000);
             camera.lookAt(0, 0, 0);
 
             // Enhanced lighting setup
@@ -240,7 +236,7 @@
                     camera.position.set(0, 300, 0);
                     camera.lookAt(0, 0, 0);
                 } else {
-                    camera.position.set(0, 200, 600);
+                    camera.position.set(0, 300, 1000);
                     camera.lookAt(0, 0, 0);
                 }
             }
