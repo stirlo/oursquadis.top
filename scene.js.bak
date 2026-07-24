@@ -465,7 +465,6 @@ function createOrbitLine(radius) {
     const points = [];
 
     for (let i = 0; i <= segments; i++) {
-// [colophon] I cannot describe the function because the source code is not available to me.
         const theta = (i / segments) * Math.PI * 2;
         points.push(
             Math.cos(theta) * radius,

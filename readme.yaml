@@ -1,7 +1,7 @@
 ---
 title: oursquadis.top
-description: Watch Halley's Comet's entire 76-year journey compressed into 80 mesmerizing
-  seconds.
+description: See our solar system through the eyes of Halley's Comet in a real-time
+  3D visualization.
 layout: project
 date: '2026-07-24'
 tags:
@@ -18,14 +18,14 @@ generated_by: colophon v0.1
 human_reviewed: false
 ---
 
-_Watch Halley's Comet's entire 76-year journey compressed into 80 mesmerizing seconds._
+_See our solar system through the eyes of Halley's Comet in a real-time 3D visualization._
 
 ## What oursquadis.top does
 
-Understanding our solar system's scale and motion is difficult from static images or text descriptions. A dynamic 3D perspective lets you truly grasp how planets orbit and where a famous comet travels through space. This visualization renders the solar system in real-time using Three.js, showing all major planets with NASA textures and cel-shaded artistic styling from Halley's Comet's point of view. The simulation compresses decades into seconds while maintaining accurate orbital mechanics, making the cosmic dance both scientifically grounded and visually stunning. Imagine floating alongside Halley's Comet as it swings through the inner solar system, watching Mercury, Venus, Earth, and Mars wheel around the sun while the outer giants hold their distant posts. The 80-second loop lets you experience this celestial journey repeatedly, each pass revealing new details in the motion and relationships between worlds.
+Understanding orbital mechanics and celestial dynamics can feel abstract without a visual reference point. This project compresses Halley's 76-year orbit into an 80-second journey, making it possible to witness the comet's path through our solar system in real time. The visualization renders the sun, all major planets with accurate textures, and Halley's Comet's trajectory using Three.js and WebGL. You can interact with the scene through orbit controls while the simulation animates automatically when you open the page. Imagine watching the planets orbit around the sun while traveling alongside Halley's Comet, seeing the solar system from a perspective that's rarely visualized. The cel-shaded rendering creates an artistic yet scientifically grounded view, viewable on any modern browser including mobile devices.
 
 ## Get oursquadis.top
 
-Visit oursquadis.top in any modern browser to start your cosmic journey immediately,no installation or build process required. [Get oursquadis.top](/Users/DT/Documents/repo/oursquadis.top)
+Visit the project at oursquadis.top to experience Halley's Comet's journey through our solar system. [Get oursquadis.top](/Users/DT/Documents/repo/oursquadis.top)
 
-<!-- colophon:monroe {"attention": "Watch Halley's Comet's entire 76-year journey compressed into 80 mesmerizing seconds.", "need": "Understanding our solar system's scale and motion is difficult from static images or text descriptions. A dynamic 3D perspective lets you truly grasp how planets orbit and where a famous comet travels through space.", "satisfaction": "This visualization renders the solar system in real-time using Three.js, showing all major planets with NASA textures and cel-shaded artistic styling from Halley's Comet's point of view. The simulation compresses decades into seconds while maintaining accurate orbital mechanics, making the cosmic dance both scientifically grounded and visually stunning.", "visualization": "Imagine floating alongside Halley's Comet as it swings through the inner solar system, watching Mercury, Venus, Earth, and Mars wheel around the sun while the outer giants hold their distant posts. The 80-second loop lets you experience this celestial journey repeatedly, each pass revealing new details in the motion and relationships between worlds.", "action": "Visit oursquadis.top in any modern browser to start your cosmic journey immediately,no installation or build process required."} -->
+<!-- colophon:monroe {"attention": "See our solar system through the eyes of Halley's Comet in a real-time 3D visualization.", "need": "Understanding orbital mechanics and celestial dynamics can feel abstract without a visual reference point. This project compresses Halley's 76-year orbit into an 80-second journey, making it possible to witness the comet's path through our solar system in real time.", "satisfaction": "The visualization renders the sun, all major planets with accurate textures, and Halley's Comet's trajectory using Three.js and WebGL. You can interact with the scene through orbit controls while the simulation animates automatically when you open the page.", "visualization": "Imagine watching the planets orbit around the sun while traveling alongside Halley's Comet, seeing the solar system from a perspective that's rarely visualized. The cel-shaded rendering creates an artistic yet scientifically grounded view, viewable on any modern browser including mobile devices.", "action": "Visit the project at oursquadis.top to experience Halley's Comet's journey through our solar system."} -->

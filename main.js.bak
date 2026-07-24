@@ -140,7 +140,6 @@ function animate() {
     requestAnimationFrame(animate);
 
     const elapsedTime = clock.getElapsedTime();
-// [colophon] The function likely calculates or returns the progress of an orbital motion or animation cycle.
     const orbitProgress = (elapsedTime % ORBIT_DURATION) / ORBIT_DURATION;
 
     // Halley's orbit calculation
