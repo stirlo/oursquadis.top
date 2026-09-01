@@ -1,6 +1,6 @@
 # Solar System - Halley's Comet Perspective
 
-A 3D visualization of our solar system from Halley's Comet's perspective, created using Three.js. The simulation compresses the comet's ~76-year orbit into an 80-second visualization, allowing viewers to experience the journey of this famous celestial object through our solar system.
+A 3D visualization of our solar system from Halley's Comet's perspective, created using Three.js. The simulation compresses the comet's roughly 76-year orbit into a 90-second visualization, allowing viewers to ride through the journey.
 
 ## Features
 
@@ -9,6 +9,9 @@ A 3D visualization of our solar system from Halley's Comet's perspective, create
 - Cel-shaded rendering for artistic visualization
 - Accurate planetary textures
 - Time-compressed orbital simulation
+- Keplerian acceleration through perihelion and a retrograde inclined orbit
+- Ride camera aligned with the comet's velocity, with free, top and side views
+- Solar-facing coma and tail that strengthen near the Sun
 - Mobile-friendly and cross-browser compatible
 - Responsive design
 

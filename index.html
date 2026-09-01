@@ -11,9 +11,9 @@
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#603cba">
     <meta name="msapplication-TileColor" content="#603cba">
     <meta name="theme-color" content="#000000">
-    <title>Our Squad is Top — Solar System</title>
+    <title>Our Squad is Top — Ride Halley's Comet</title>
     <meta property="og:title" content="Our Squad is Top"/>
-    <meta property="og:description" content="A tour through our solar system"/>
+    <meta property="og:description" content="Ride with Halley's Comet through an animated solar system"/>
     <meta property="og:url" content="https://oursquadis.top"/>
     <meta property="og:image" content="https://oursquadis.top/android-chrome-512x512.png"/>
     <style>
@@ -37,7 +37,8 @@
         #ui {
             position: fixed; bottom: 24px; left: 50%;
             transform: translateX(-50%);
-            display: flex; gap: 8px; z-index: 100;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 8px; width: min(94vw, 620px); z-index: 100;
         }
         .btn {
             background: rgba(255,255,255,0.08);
@@ -76,6 +77,12 @@
             z-index: 200;
             border: 1px solid rgba(255,255,255,0.12);
         }
+
+        @media (max-width: 560px) {
+            #ui { bottom: 14px; gap: 6px; }
+            .btn { font-size: 11px; padding: 7px 12px; }
+            #label { top: 14px; width: calc(100vw - 28px); text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -91,6 +98,7 @@
         <button class="btn active" id="btn-free">Free</button>
         <button class="btn" id="btn-top">Top</button>
         <button class="btn" id="btn-side">Side</button>
+        <button class="btn" id="btn-ride">Ride Halley</button>
         <button class="btn" id="btn-speed">Speed ×1</button>
     </div>
 
@@ -222,6 +230,107 @@
         const bodies = [];
         const meshes = []; // for raycasting
 
+        // ── Halley's Comet ───────────────────────────────────────────
+        const HALLEY_ECCENTRICITY = 0.96658;
+        const HALLEY_SEMI_MAJOR_AU = 17.834;
+        const HALLEY_INCLINATION = THREE.MathUtils.degToRad(162.26);
+        const HALLEY_ORBIT_SECONDS = 90;
+        const AU_SCALE = DIST * 10;
+        let halleyMeanAnomaly = -0.72;
+        let halleyDistanceAU = 0;
+
+        const comet = new THREE.Group();
+        const nucleus = new THREE.Mesh(
+            new THREE.IcosahedronGeometry(5.5, 2),
+            new THREE.MeshPhongMaterial({ color: 0xced8dc, emissive: 0x20333b, shininess: 4 })
+        );
+        nucleus.userData.name = "Halley's Comet";
+        comet.add(nucleus);
+        meshes.push(nucleus);
+
+        const coma = new THREE.Mesh(
+            new THREE.SphereGeometry(13, 24, 24),
+            new THREE.MeshBasicMaterial({
+                color: 0x9aefff,
+                transparent: true,
+                opacity: 0.16,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            })
+        );
+        comet.add(coma);
+
+        const cometTail = new THREE.Mesh(
+            new THREE.ConeGeometry(7, 1, 24, 1, true),
+            new THREE.MeshBasicMaterial({
+                color: 0x78dfff,
+                transparent: true,
+                opacity: 0.18,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                side: THREE.DoubleSide,
+            })
+        );
+        comet.add(cometTail);
+        scene.add(comet);
+
+        const halleyOrbitPoints = [];
+        for (let i = 0; i <= 360; i++) {
+            const eccentricAnomaly = (i / 360) * Math.PI * 2;
+            const x = HALLEY_SEMI_MAJOR_AU * AU_SCALE * (Math.cos(eccentricAnomaly) - HALLEY_ECCENTRICITY);
+            const planeZ = HALLEY_SEMI_MAJOR_AU * AU_SCALE * Math.sqrt(1 - HALLEY_ECCENTRICITY ** 2) * Math.sin(eccentricAnomaly);
+            halleyOrbitPoints.push(new THREE.Vector3(
+                x,
+                -planeZ * Math.sin(HALLEY_INCLINATION),
+                planeZ * Math.cos(HALLEY_INCLINATION)
+            ));
+        }
+        scene.add(new THREE.LineLoop(
+            new THREE.BufferGeometry().setFromPoints(halleyOrbitPoints),
+            new THREE.LineBasicMaterial({ color: 0x63dff2, transparent: true, opacity: 0.34 })
+        ));
+
+        const cometPreviousPosition = new THREE.Vector3();
+        const cometVelocity = new THREE.Vector3(1, 0, 0);
+        const tailAxis = new THREE.Vector3(0, -1, 0);
+
+        /** Solve Kepler's equation so Halley accelerates naturally through perihelion. */
+        function halleyPosition(meanAnomaly, target) {
+            let eccentricAnomaly = meanAnomaly;
+            for (let i = 0; i < 7; i++) {
+                eccentricAnomaly -= (
+                    eccentricAnomaly - HALLEY_ECCENTRICITY * Math.sin(eccentricAnomaly) - meanAnomaly
+                ) / (1 - HALLEY_ECCENTRICITY * Math.cos(eccentricAnomaly));
+            }
+            const x = HALLEY_SEMI_MAJOR_AU * AU_SCALE * (Math.cos(eccentricAnomaly) - HALLEY_ECCENTRICITY);
+            const planeZ = HALLEY_SEMI_MAJOR_AU * AU_SCALE * Math.sqrt(1 - HALLEY_ECCENTRICITY ** 2) * Math.sin(eccentricAnomaly);
+            halleyDistanceAU = Math.hypot(x, planeZ) / AU_SCALE;
+            return target.set(
+                x,
+                -planeZ * Math.sin(HALLEY_INCLINATION),
+                planeZ * Math.cos(HALLEY_INCLINATION)
+            );
+        }
+
+        /** Advance the nucleus and keep its illuminated tail pointed away from the Sun. */
+        function updateHalley(dt) {
+            cometPreviousPosition.copy(comet.position);
+            halleyMeanAnomaly = (halleyMeanAnomaly + (Math.PI * 2 * dt) / HALLEY_ORBIT_SECONDS) % (Math.PI * 2);
+            halleyPosition(halleyMeanAnomaly, comet.position);
+            cometVelocity.subVectors(comet.position, cometPreviousPosition);
+            if (cometVelocity.lengthSq() > 0.0001) cometVelocity.normalize();
+
+            const awayFromSun = comet.position.clone().normalize();
+            const tailLength = THREE.MathUtils.clamp(270 / Math.sqrt(Math.max(halleyDistanceAU, 0.58)), 48, 350);
+            cometTail.scale.set(1, tailLength, 1);
+            cometTail.position.copy(awayFromSun).multiplyScalar(tailLength * 0.5);
+            cometTail.quaternion.setFromUnitVectors(tailAxis, awayFromSun);
+            coma.material.opacity = THREE.MathUtils.clamp(0.42 / Math.sqrt(Math.max(halleyDistanceAU, 0.58)), 0.08, 0.42);
+        }
+
+        halleyPosition(halleyMeanAnomaly, comet.position);
+        cometPreviousPosition.copy(comet.position);
+
         PLANETS.forEach(([name, texture, rRatio, au, inc, rings]) => {
             const orbitRadius = SUN_R + au * DIST * 10;
             const r = Math.max(SUN_R * rRatio * 0.6, MIN_R);
@@ -322,18 +431,67 @@
         });
 
         // ── Camera presets ────────────────────────────────────────────
+        const modeLabel = document.getElementById('label');
+        const rideButton = document.getElementById('btn-ride');
+        const rideCameraPosition = new THREE.Vector3();
+        const rideLookTarget = new THREE.Vector3();
+        const rideSide = new THREE.Vector3();
+        const worldUp = new THREE.Vector3(0, 1, 0);
+        let rideMode = false;
+
         function setActive(id) {
-            ['btn-free','btn-top','btn-side'].forEach(b =>
+            ['btn-free','btn-top','btn-side','btn-ride'].forEach(b =>
                 document.getElementById(b).classList.toggle('active', b === id));
         }
+
+        /** Return camera control to the visitor without changing its current position. */
+        function leaveRide(activePreset) {
+            rideMode = false;
+            controls.enabled = true;
+            camera.up.copy(worldUp);
+            camera.fov = 60;
+            camera.updateProjectionMatrix();
+            rideButton.textContent = 'Ride Halley';
+            modeLabel.textContent = 'Our Solar System';
+            setActive(activePreset);
+        }
+
+        /** Follow just behind Halley's velocity vector and look into its path. */
+        function updateRideCamera(dt, snap = false) {
+            rideSide.crossVectors(cometVelocity, worldUp);
+            if (rideSide.lengthSq() > 0.0001) rideSide.normalize();
+            rideCameraPosition.copy(comet.position)
+                .addScaledVector(cometVelocity, -92)
+                .addScaledVector(rideSide, 42)
+                .addScaledVector(worldUp, 30);
+            rideLookTarget.copy(comet.position).addScaledVector(cometVelocity, 230);
+            if (snap) camera.position.copy(rideCameraPosition);
+            else camera.position.lerp(rideCameraPosition, Math.min(1, dt * 5.5));
+            camera.lookAt(rideLookTarget);
+            modeLabel.textContent = `Riding Halley's Comet / ${halleyDistanceAU.toFixed(2)} AU from the Sun`;
+        }
+
         document.getElementById('btn-top').addEventListener('click', () => {
-            camera.position.set(0, 2200, 0); camera.lookAt(0,0,0); controls.update(); setActive('btn-top');
+            leaveRide('btn-top'); camera.position.set(0, 2200, 0); camera.lookAt(0,0,0); controls.update();
         });
         document.getElementById('btn-side').addEventListener('click', () => {
-            camera.position.set(2200, 60, 0); camera.lookAt(0,0,0); controls.update(); setActive('btn-side');
+            leaveRide('btn-side'); camera.position.set(2200, 60, 0); camera.lookAt(0,0,0); controls.update();
         });
         document.getElementById('btn-free').addEventListener('click', () => {
-            camera.position.set(0, 300, 700); camera.lookAt(0,0,0); controls.update(); setActive('btn-free');
+            leaveRide('btn-free'); camera.position.set(0, 300, 700); camera.lookAt(0,0,0); controls.update();
+        });
+        rideButton.addEventListener('click', () => {
+            if (rideMode) {
+                leaveRide('btn-free');
+                return;
+            }
+            rideMode = true;
+            controls.enabled = false;
+            camera.fov = 72;
+            camera.updateProjectionMatrix();
+            rideButton.textContent = 'Leave ride';
+            setActive('btn-ride');
+            updateRideCamera(1, true);
         });
 
         // ── Loading complete ──────────────────────────────────────────
@@ -354,6 +512,7 @@
             last = now;
 
             sun.rotation.y += 0.0008 * speedMult;
+            updateHalley(dt);
 
             bodies.forEach(b => {
                 if (b.isMoon) {
@@ -366,7 +525,8 @@
                 b.mesh.rotation.y += b.spin * dt * 60;
             });
 
-            controls.update();
+            if (rideMode) updateRideCamera(dt);
+            else controls.update();
             renderer.render(scene, camera);
         }
         animate();
